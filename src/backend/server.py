@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
 Bhodi Learning Platform - Backend Server
-Step 2: Backend Hello World - Minimal Flask server with basic connectivity
+Step 3: Frontend-Backend Connection - Adding endpoints for frontend communication
 """
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 import logging
 
@@ -28,7 +28,7 @@ def hello_world():
     return jsonify({
         "status": "success",
         "message": "Bhodi Learning Platform Backend is running!",
-        "step": "Step 2: Backend Hello World",
+        "step": "Step 3: Frontend-Backend Connection",
         "version": "1.0.0"
     })
 
@@ -40,7 +40,48 @@ def health_check():
     return jsonify({
         "status": "healthy",
         "service": "bhodi-learning-platform",
-        "step": 2
+        "step": 3
+    })
+
+@app.route('/api/test-connection', methods=['POST'])
+def test_connection():
+    """
+    Test endpoint for frontend-backend communication
+    Step 3: Establishes basic communication channel
+    """
+    logger.info("Frontend connection test accessed")
+    
+    # Get any data sent from frontend
+    data = request.get_json() if request.is_json else {}
+    
+    return jsonify({
+        "status": "success",
+        "message": "Frontend-Backend connection successful!",
+        "step": "Step 3: Frontend-Backend Connection",
+        "received_data": data,
+        "timestamp": "2025-01-23T14:00:00Z"
+    })
+
+@app.route('/api/simulate-run', methods=['POST'])
+def simulate_run():
+    """
+    Simulate code execution for Step 3 testing
+    This will be replaced with real code execution in Step 4
+    """
+    logger.info("Simulate run endpoint accessed")
+    
+    # Get code from frontend
+    data = request.get_json() or {}
+    code = data.get('code', '')
+    
+    logger.info(f"Received code: {code[:50]}..." if len(code) > 50 else f"Received code: {code}")
+    
+    return jsonify({
+        "status": "success",
+        "message": "Code simulation complete",
+        "output": f"Simulated output for code:\n{code}\n\n[This is Step 3 simulation - real execution in Step 4]",
+        "execution_time": "0.001s",
+        "step": "Step 3: Frontend-Backend Connection"
     })
 
 @app.errorhandler(404)
@@ -68,7 +109,7 @@ def internal_error(error):
 
 if __name__ == '__main__':
     logger.info("Starting Bhodi Learning Platform Backend Server...")
-    logger.info("Step 2: Backend Hello World")
+    logger.info("Step 3: Frontend-Backend Connection")
     logger.info("Server will run on http://localhost:5000")
     
     # Run the Flask development server

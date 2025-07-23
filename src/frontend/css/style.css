@@ -209,6 +209,11 @@ body {
     background: #2980b9;
 }
 
+.action-btn.primary:disabled {
+    background: #bdc3c7;
+    cursor: not-allowed;
+}
+
 .action-btn.secondary {
     background: #95a5a6;
     color: white;
@@ -216,6 +221,11 @@ body {
 
 .action-btn.secondary:hover {
     background: #7f8c8d;
+}
+
+.action-btn.secondary:disabled {
+    background: #bdc3c7;
+    cursor: not-allowed;
 }
 
 .editor-container {
@@ -253,11 +263,35 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
+    transition: all 0.3s ease;
 }
 
-.status-text::before {
+/* Status States - Step 3: Frontend-Backend Connection */
+.status-text.status-ready::before {
     content: "●";
     color: #27ae60;
+    animation: none;
+}
+
+.status-text.status-running::before {
+    content: "●";
+    color: #f39c12;
+    animation: pulse 1.5s ease-in-out infinite alternate;
+}
+
+.status-text.status-error::before {
+    content: "●";
+    color: #e74c3c;
+    animation: none;
+}
+
+@keyframes pulse {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0.4;
+    }
 }
 
 /* Output Panel */
@@ -315,6 +349,7 @@ body {
     border: 1px solid #e9ecef;
     white-space: pre-wrap;
     margin: 0;
+    line-height: 1.4;
 }
 
 #feedback-text {
@@ -322,6 +357,46 @@ body {
     padding: 1rem;
     border-radius: 4px;
     border: 1px solid #e9ecef;
+    white-space: pre-wrap;
+    line-height: 1.5;
+}
+
+/* Success and Error message styling */
+#feedback-text:has-text("✅") {
+    border-color: #27ae60;
+    background: #d5f4e6;
+}
+
+#feedback-text:has-text("❌") {
+    border-color: #e74c3c;
+    background: #fdf2f2;
+}
+
+/* Loading states for buttons */
+.action-btn.loading {
+    position: relative;
+    color: transparent;
+}
+
+.action-btn.loading::after {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* Responsive Design */
