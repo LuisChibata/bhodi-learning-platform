@@ -1,0 +1,31 @@
+{
+  "name": "bhodi-learning-platform",
+  "version": "1.0.0",
+  "description": "Interactive Python learning platform with inheritance visualization",
+  "main": "src/frontend/js/main.js",
+  "scripts": {
+    "dev": "python src/backend/server.py",
+    "test": "pytest",
+    "format": "black src/backend/",
+    "lint": "flake8 src/backend/",
+    "start": "python src/backend/server.py"
+  },
+  "dependencies": {
+    "codemirror": "^6.0.1",
+    "mermaid": "^10.6.1"
+  },
+  "devDependencies": {
+    "prettier": "^3.0.0",
+    "eslint": "^8.0.0"
+  },
+  "keywords": [
+    "education",
+    "python",
+    "programming",
+    "learning",
+    "interactive",
+    "visualization"
+  ],
+  "author": "Learning Platform Team",
+  "license": "MIT"
+} 
