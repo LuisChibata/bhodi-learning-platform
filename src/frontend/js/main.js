@@ -1,5 +1,5 @@
 // Main JavaScript for Bhodi Learning Platform
-// Step 3: Frontend-Backend Connection - Real HTTP communication
+// Step 4: Code Execution Pipeline - Real Python execution
 
 // Configuration
 const API_BASE_URL = 'http://localhost:5000';
@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Test initial connection to backend
     testBackendConnection();
     
-    console.log('Bhodi Learning Platform initialized - Step 3: Frontend-Backend Connection');
+    console.log('Bhodi Learning Platform initialized - Step 4: Code Execution Pipeline');
 });
 
 /**
@@ -95,7 +95,7 @@ function initializeButtons() {
     const nextBtn = document.getElementById('next-btn');
     const settingsBtn = document.getElementById('settings-btn');
     
-    // Run Code button - now communicates with backend
+    // Run Code button - now executes real Python code
     if (runBtn) {
         runBtn.addEventListener('click', async () => {
             await handleRunCode();
@@ -132,21 +132,34 @@ function initializeButtons() {
 }
 
 /**
- * Handle Run Code button click - communicate with backend
+ * Handle Run Code button click - execute real Python code
  */
 async function handleRunCode() {
+    const runBtn = document.getElementById('run-btn');
+    
     try {
-        console.log('Run Code clicked - sending to backend');
+        console.log('Run Code clicked - executing real Python code');
         updateStatus('Running...', 'running');
+        
+        // Disable button during execution
+        if (runBtn) {
+            runBtn.disabled = true;
+            runBtn.classList.add('loading');
+        }
         
         // Get code from editor
         const codeEditor = document.getElementById('code-editor');
-        const code = codeEditor ? codeEditor.value : 'print("Hello, Bhodi!")';
+        const code = codeEditor ? codeEditor.value.trim() : '';
         
-        console.log('Sending code to backend:', code);
+        if (!code) {
+            showOutput('Error: No code to execute.\nPlease enter some Python code in the editor.');
+            return;
+        }
         
-        // Send code to backend simulation endpoint
-        const response = await fetch(`${API_BASE_URL}/api/simulate-run`, {
+        console.log('Sending code to backend for execution:', code);
+        
+        // Send code to backend for real execution
+        const response = await fetch(`${API_BASE_URL}/api/run-code`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -162,30 +175,84 @@ async function handleRunCode() {
         }
         
         const result = await response.json();
-        console.log('Backend response:', result);
+        console.log('Backend execution result:', result);
         
-        // Display result in output
-        showOutput(result.output || 'No output received');
-        updateStatus('Execution complete', 'ready');
+        // Handle the response based on status
+        if (result.status === 'success') {
+            // Successful execution
+            const output = result.output || '(no output)';
+            const executionTime = result.execution_time || 'unknown';
+            showOutput(`${output}\n\n--- Execution completed in ${executionTime} ---`);
+            updateStatus('Execution successful', 'ready');
+        } else {
+            // Error during execution
+            handleExecutionError(result);
+        }
         
         // Reset status after a moment
         setTimeout(() => {
             updateStatus('Ready', 'ready');
-        }, 2000);
+        }, 3000);
         
     } catch (error) {
-        console.error('Error running code:', error);
-        updateStatus('Error', 'error');
-        showOutput(`Error: Failed to execute code\n${error.message}`);
+        console.error('Error executing code:', error);
+        updateStatus('Execution failed', 'error');
+        showOutput(`Error: Failed to execute code\n\nDetails: ${error.message}\n\nPlease check:\n1. Backend server is running\n2. Internet connection is stable`);
         
         setTimeout(() => {
             updateStatus('Ready', 'ready');
         }, 3000);
+    } finally {
+        // Re-enable button
+        if (runBtn) {
+            runBtn.disabled = false;
+            runBtn.classList.remove('loading');
+        }
     }
 }
 
 /**
- * Handle Test Connection (using Check Answer button for Step 3)
+ * Handle execution errors with specific feedback
+ */
+function handleExecutionError(result) {
+    const errorType = result.error_type || 'unknown';
+    const executionTime = result.execution_time || 'unknown';
+    let errorMessage = '';
+    
+    switch (errorType) {
+        case 'timeout_error':
+            errorMessage = `⏱️ Timeout Error\n\nYour code took too long to execute (over ${result.timeout}s).\n\nTips:\n- Check for infinite loops\n- Reduce the complexity of your code\n- Avoid long-running operations`;
+            break;
+            
+        case 'runtime_error':
+            const stderr = result.error_output || 'Unknown runtime error';
+            errorMessage = `🐛 Runtime Error\n\n${stderr}\n\nExecution time: ${executionTime}`;
+            if (result.output) {
+                errorMessage += `\n\nOutput before error:\n${result.output}`;
+            }
+            break;
+            
+        case 'input_error':
+            errorMessage = `📝 Input Error\n\n${result.message}\n\nPlease enter some Python code to execute.`;
+            break;
+            
+        case 'system_error':
+            errorMessage = `⚙️ System Error\n\n${result.message}\n\nThis appears to be a server configuration issue.`;
+            break;
+            
+        default:
+            errorMessage = `❌ Execution Error\n\n${result.message}\n\nExecution time: ${executionTime}`;
+            if (result.error_details) {
+                errorMessage += `\n\nDetails: ${result.error_details}`;
+            }
+    }
+    
+    showOutput(errorMessage);
+    updateStatus('Execution error', 'error');
+}
+
+/**
+ * Handle Test Connection (using Check Answer button for Step 4)
  */
 async function handleTestConnection() {
     try {
@@ -201,7 +268,7 @@ async function handleTestConnection() {
             body: JSON.stringify({ 
                 test: 'frontend-backend-connection',
                 timestamp: new Date().toISOString(),
-                step: 3
+                step: 4
             })
         });
         
@@ -213,7 +280,7 @@ async function handleTestConnection() {
         console.log('Connection test result:', result);
         
         // Show success message in feedback
-        showFeedback(`✅ ${result.message}\n\nStep: ${result.step}\nTimestamp: ${result.timestamp}\nReceived data: ${JSON.stringify(result.received_data, null, 2)}`);
+        showFeedback(`✅ ${result.message}\n\nStep: ${result.step}\nTimestamp: ${result.timestamp}\nReceived data: ${JSON.stringify(result.received_data, null, 2)}\n\n🎉 Code execution pipeline is ready!\nTry running some Python code with the "Run Code" button.`);
         updateStatus('Connection successful', 'ready');
         
         setTimeout(() => {
@@ -223,7 +290,7 @@ async function handleTestConnection() {
     } catch (error) {
         console.error('Connection test failed:', error);
         updateStatus('Connection failed', 'error');
-        showFeedback(`❌ Connection test failed\n\nError: ${error.message}\n\nPlease ensure:\n1. Backend server is running on http://localhost:5000\n2. CORS is properly configured`);
+        showFeedback(`❌ Connection test failed\n\nError: ${error.message}\n\nPlease ensure:\n1. Backend server is running on http://localhost:5000\n2. CORS is properly configured\n3. The /api/test-connection endpoint is working`);
         
         setTimeout(() => {
             updateStatus('Ready', 'ready');
@@ -283,6 +350,16 @@ function getCurrentCode() {
     return codeEditor ? codeEditor.value.trim() : '';
 }
 
+/**
+ * Utility function to set code in editor
+ */
+function setCode(code) {
+    const codeEditor = document.getElementById('code-editor');
+    if (codeEditor) {
+        codeEditor.value = code;
+    }
+}
+
 // Export functions for testing
 window.BhodiPlatform = {
     testBackendConnection,
@@ -290,5 +367,7 @@ window.BhodiPlatform = {
     handleTestConnection,
     showOutput,
     showFeedback,
-    updateStatus
+    updateStatus,
+    getCurrentCode,
+    setCode
 }; 
