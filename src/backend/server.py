@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Bhodi Learning Platform - Backend Server
-Step 4: Code Execution Pipeline - Real Python execution with safety measures
+Step 5: Frontend Code Editor - Enhanced CodeMirror integration with real Python execution
 """
 
 from flask import Flask, jsonify, request
@@ -38,7 +38,7 @@ def hello_world():
     return jsonify({
         "status": "success",
         "message": "Bhodi Learning Platform Backend is running!",
-        "step": "Step 4: Code Execution Pipeline",
+        "step": "Step 5: Frontend Code Editor",
         "version": "1.0.0"
     })
 
@@ -50,7 +50,7 @@ def health_check():
     return jsonify({
         "status": "healthy",
         "service": "bhodi-learning-platform",
-        "step": 4
+        "step": 5
     })
 
 @app.route('/api/test-connection', methods=['POST'])
@@ -67,7 +67,7 @@ def test_connection():
     return jsonify({
         "status": "success",
         "message": "Frontend-Backend connection successful!",
-        "step": "Step 4: Code Execution Pipeline",
+        "step": "Step 5: Frontend Code Editor",
         "received_data": data,
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     })
@@ -158,7 +158,7 @@ def execute_python_code(code):
                     "message": "Code executed successfully",
                     "output": stdout,
                     "execution_time": f"{execution_time:.3f}s",
-                    "step": "Step 4: Code Execution Pipeline"
+                    "step": "Step 5: Frontend Code Editor"
                 }
             else:
                 # Runtime error
@@ -246,7 +246,7 @@ def internal_error(error):
 
 if __name__ == '__main__':
     logger.info("Starting Bhodi Learning Platform Backend Server...")
-    logger.info("Step 4: Code Execution Pipeline - Real Python execution")
+    logger.info("Step 5: Frontend Code Editor - Enhanced CodeMirror integration")
     logger.info("Server will run on http://localhost:5000")
     logger.info(f"Code execution timeout: {CODE_EXECUTION_TIMEOUT}s")
     logger.info(f"Max output length: {MAX_OUTPUT_LENGTH} characters")

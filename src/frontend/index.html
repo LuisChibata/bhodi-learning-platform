@@ -5,6 +5,56 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bhodi Learning Platform</title>
     <link rel="stylesheet" href="css/style.css">
+    
+    <!-- CodeMirror 6 CSS -->
+    <style>
+        /* CodeMirror 6 integration styles */
+        .cm-editor {
+            height: 100%;
+            font-size: 14px;
+            border: none;
+            outline: none;
+        }
+        
+        .cm-focused {
+            outline: none;
+        }
+        
+        .cm-editor .cm-scroller {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            line-height: 1.5;
+        }
+        
+        .cm-editor .cm-content {
+            padding: 1rem;
+            min-height: 100%;
+        }
+        
+        .cm-editor .cm-gutters {
+            background-color: #f8f9fa;
+            border-right: 1px solid #e9ecef;
+        }
+        
+        .cm-editor .cm-lineNumbers .cm-gutterElement {
+            color: #6c757d;
+            font-size: 13px;
+        }
+        
+        /* Dark theme variables for CodeMirror */
+        .cm-editor.cm-theme-dark {
+            background-color: #2d3748;
+            color: #e2e8f0;
+        }
+        
+        .cm-editor.cm-theme-dark .cm-gutters {
+            background-color: #1a202c;
+            border-right: 1px solid #4a5568;
+        }
+        
+        .cm-editor.cm-theme-dark .cm-lineNumbers .cm-gutterElement {
+            color: #a0aec0;
+        }
+    </style>
 </head>
 <body>
     <!-- Header Navigation Bar -->
@@ -33,7 +83,16 @@
             <div class="problem-statement">
                 <h2>Problem Statement</h2>
                 <div id="problem-content" class="problem-content">
-                    <p>Welcome to the Bhodi Learning Platform! This is where lesson instructions will appear.</p>
+                    <p><strong>Step 5: Frontend Code Editor</strong></p>
+                    <p>Welcome to the enhanced Bhodi Learning Platform! We've upgraded the code editor with syntax highlighting and better editing features.</p>
+                    <p><strong>Try the new editor:</strong></p>
+                    <ul>
+                        <li>✨ Python syntax highlighting</li>
+                        <li>📝 Line numbers</li>
+                        <li>🔍 Better code readability</li>
+                        <li>⌨️ Improved typing experience</li>
+                    </ul>
+                    <p>The editor now provides a professional coding experience with all the features you'd expect from a modern development environment.</p>
                 </div>
             </div>
             <div class="visualizer">
@@ -49,18 +108,21 @@
             <!-- Code Editor Panel -->
             <div class="code-panel">
                 <div class="panel-header">
-                    <h3>Code Editor</h3>
+                    <h3>Code Editor <span class="editor-badge">Enhanced</span></h3>
                     <div class="code-actions">
                         <button id="run-btn" class="action-btn primary">Run Code</button>
                         <button id="check-btn" class="action-btn secondary">Check Answer</button>
                     </div>
                 </div>
                 <div class="editor-container">
-                    <textarea id="code-editor" class="code-editor" placeholder="# Your Python code goes here..."># Step 4: Code Execution Pipeline Test
-# Try running this code to test the execution system!
+                    <!-- CodeMirror will replace this div -->
+                    <div id="code-editor-container">
+                        <!-- Fallback textarea for browsers without JavaScript -->
+                        <textarea id="code-editor-fallback" class="code-editor" style="display: none;"># Step 5: Enhanced Code Editor Test
+# Try the new CodeMirror editor with syntax highlighting!
 
 print("Hello, Bhodi!")
-print("Welcome to the Python learning platform!")
+print("Welcome to the enhanced Python learning platform!")
 
 # Try some basic Python operations
 name = "Bhodi"
@@ -71,12 +133,13 @@ print(f"Student: {name}, Age: {age}")
 result = 5 + 3 * 2
 print(f"5 + 3 * 2 = {result}")
 
-# Test a loop
+# Test a loop with syntax highlighting
 print("Counting to 5:")
 for i in range(1, 6):
     print(f"  {i}")
 
-print("Code execution test complete!")</textarea>
+print("Enhanced editor test complete!")</textarea>
+                    </div>
                 </div>
                 <div class="status-indicator">
                     <span id="status-text" class="status-text">Ready</span>
@@ -94,17 +157,44 @@ print("Code execution test complete!")</textarea>
                 </div>
                 <div class="output-content">
                     <div id="output-display" class="output-display active">
-                        <pre id="output-text">Click "Run Code" to see your program's output here.</pre>
+                        <pre id="output-text">Click "Run Code" to see your program's output here.
+
+The enhanced editor now features:
+✨ Syntax highlighting for Python
+📝 Line numbers for easy navigation  
+🔍 Better code readability
+⌨️ Professional editing experience</pre>
                     </div>
                     <div id="feedback-display" class="feedback-display">
-                        <div id="feedback-text">Click "Check Answer" to see how your solution compares to the expected result.</div>
+                        <div id="feedback-text">Click "Check Answer" to test the backend connection and see how your solution compares to the expected result.</div>
                     </div>
                 </div>
             </div>
         </section>
     </main>
 
-    <!-- JavaScript -->
+    <!-- CodeMirror 6 JavaScript (ES Modules via CDN) -->
+    <script type="module">
+        // Import CodeMirror 6 modules
+        import { EditorView, basicSetup } from 'https://cdn.skypack.dev/@codemirror/basic-setup@0.20.0';
+        import { EditorState } from 'https://cdn.skypack.dev/@codemirror/state@6.3.3';
+        import { python } from 'https://cdn.skypack.dev/@codemirror/lang-python@6.1.3';
+        import { oneDark } from 'https://cdn.skypack.dev/@codemirror/theme-one-dark@6.1.2';
+        
+        // Make CodeMirror available globally
+        window.CodeMirrorModules = {
+            EditorView,
+            EditorState,
+            basicSetup,
+            python,
+            oneDark
+        };
+        
+        // Signal that CodeMirror is loaded
+        window.dispatchEvent(new CustomEvent('codemirror-loaded'));
+    </script>
+    
+    <!-- Main JavaScript -->
     <script src="js/main.js"></script>
     <script src="js/visualizer.js"></script>
 </body>

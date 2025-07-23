@@ -143,6 +143,15 @@ body {
     margin-bottom: 1rem;
 }
 
+.problem-content ul {
+    margin-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.problem-content li {
+    margin-bottom: 0.5rem;
+}
+
 .inheritance-diagram {
     display: flex;
     align-items: center;
@@ -182,6 +191,28 @@ body {
 .panel-header h3 {
     color: #2c3e50;
     font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Enhanced Editor Badge - Step 5 */
+.editor-badge {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+    animation: gentle-pulse 2s ease-in-out infinite;
+}
+
+@keyframes gentle-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
 }
 
 /* Code Editor */
@@ -232,8 +263,17 @@ body {
     flex: 1;
     position: relative;
     overflow: hidden;
+    background: #f8f9fa;
 }
 
+/* CodeMirror Editor Container - Step 5 */
+#code-editor-container {
+    height: 100%;
+    width: 100%;
+    position: relative;
+}
+
+/* Fallback textarea styles (hidden when CodeMirror loads) */
 .code-editor {
     width: 100%;
     height: 100%;
@@ -252,6 +292,34 @@ body {
     background: white;
 }
 
+/* CodeMirror Specific Styles - Step 5 */
+.cm-editor {
+    background: #f8f9fa !important;
+    border-radius: 0;
+}
+
+.cm-editor.cm-focused {
+    background: white !important;
+}
+
+.cm-editor .cm-gutters {
+    background-color: #f1f3f4 !important;
+    border-right: 1px solid #e0e0e0 !important;
+}
+
+.cm-editor .cm-content {
+    caret-color: #3498db;
+}
+
+/* Python syntax highlighting adjustments */
+.cm-editor .cm-keyword { color: #d73a49; font-weight: 600; }
+.cm-editor .cm-string { color: #032f62; }
+.cm-editor .cm-comment { color: #6a737d; font-style: italic; }
+.cm-editor .cm-number { color: #005cc5; }
+.cm-editor .cm-operator { color: #d73a49; }
+.cm-editor .cm-variable { color: #24292e; }
+.cm-editor .cm-builtin { color: #005cc5; font-weight: 600; }
+
 .status-indicator {
     padding: 0.5rem 1.5rem;
     background: #f8f9fa;
@@ -266,7 +334,7 @@ body {
     transition: all 0.3s ease;
 }
 
-/* Status States - Step 3: Frontend-Backend Connection */
+/* Status States - Step 4: Frontend-Backend Connection */
 .status-text.status-ready::before {
     content: "●";
     color: #27ae60;
@@ -436,5 +504,10 @@ body {
     .top-panel {
         height: auto;
         min-height: 200px;
+    }
+    
+    .editor-badge {
+        font-size: 0.6rem;
+        padding: 0.15rem 0.4rem;
     }
 } 

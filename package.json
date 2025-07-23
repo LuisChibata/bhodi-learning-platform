@@ -8,10 +8,19 @@
     "test": "pytest",
     "format": "black src/backend/",
     "lint": "flake8 src/backend/",
-    "start": "python src/backend/server.py"
+    "start": "python src/backend/server.py",
+    "install-frontend": "npm install && echo 'Frontend dependencies installed'",
+    "serve-frontend": "python -m http.server 8000 --directory src/frontend"
   },
   "dependencies": {
-    "codemirror": "^6.0.1",
+    "@codemirror/view": "^6.23.0",
+    "@codemirror/state": "^6.3.3",
+    "@codemirror/basic-setup": "^0.20.0",
+    "@codemirror/lang-python": "^6.1.3",
+    "@codemirror/theme-one-dark": "^6.1.2",
+    "@codemirror/commands": "^6.3.3",
+    "@codemirror/search": "^6.5.4",
+    "@codemirror/autocomplete": "^6.10.2",
     "mermaid": "^10.6.1"
   },
   "devDependencies": {
@@ -24,7 +33,8 @@
     "programming",
     "learning",
     "interactive",
-    "visualization"
+    "visualization",
+    "codemirror"
   ],
   "author": "Learning Platform Team",
   "license": "MIT"

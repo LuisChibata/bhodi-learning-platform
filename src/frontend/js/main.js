@@ -1,8 +1,34 @@
 // Main JavaScript for Bhodi Learning Platform
-// Step 4: Code Execution Pipeline - Real Python execution
+// Step 5: Frontend Code Editor - CodeMirror integration
 
 // Configuration
 const API_BASE_URL = 'http://localhost:5000';
+
+// CodeMirror editor instance
+let codeEditor = null;
+
+// Default code for the enhanced editor
+const DEFAULT_CODE = `# Step 5: Enhanced Code Editor Test
+# Try the new CodeMirror editor with syntax highlighting!
+
+print("Hello, Bhodi!")
+print("Welcome to the enhanced Python learning platform!")
+
+# Try some basic Python operations
+name = "Bhodi"
+age = 25
+print(f"Student: {name}, Age: {age}")
+
+# Test a simple calculation
+result = 5 + 3 * 2
+print(f"5 + 3 * 2 = {result}")
+
+# Test a loop with syntax highlighting
+print("Counting to 5:")
+for i in range(1, 6):
+    print(f"  {i}")
+
+print("Enhanced editor test complete!")`;
 
 document.addEventListener('DOMContentLoaded', function() {
     // Tab switching functionality
@@ -11,11 +37,112 @@ document.addEventListener('DOMContentLoaded', function() {
     // Button event handlers with real backend communication
     initializeButtons();
     
+    // Initialize CodeMirror when modules are loaded
+    initializeCodeEditor();
+    
     // Test initial connection to backend
     testBackendConnection();
     
-    console.log('Bhodi Learning Platform initialized - Step 4: Code Execution Pipeline');
+    console.log('Bhodi Learning Platform initialized - Step 5: Frontend Code Editor');
 });
+
+/**
+ * Initialize CodeMirror editor
+ */
+function initializeCodeEditor() {
+    // Check if CodeMirror modules are available
+    if (window.CodeMirrorModules) {
+        setupCodeMirror();
+    } else {
+        // Wait for CodeMirror to load
+        window.addEventListener('codemirror-loaded', setupCodeMirror);
+        
+        // Fallback timeout in case CDN fails
+        setTimeout(() => {
+            if (!codeEditor) {
+                console.warn('CodeMirror failed to load, using fallback textarea');
+                setupFallbackEditor();
+            }
+        }, 5000);
+    }
+}
+
+/**
+ * Set up CodeMirror editor
+ */
+function setupCodeMirror() {
+    try {
+        const { EditorView, EditorState, basicSetup, python } = window.CodeMirrorModules;
+        
+        // Create CodeMirror editor
+        const startState = EditorState.create({
+            doc: DEFAULT_CODE,
+            extensions: [
+                basicSetup,
+                python(),
+                EditorView.theme({
+                    "&": {
+                        fontSize: "14px",
+                        fontFamily: "'Consolas', 'Monaco', 'Courier New', monospace"
+                    },
+                    ".cm-editor": {
+                        height: "100%"
+                    },
+                    ".cm-scroller": {
+                        overflow: "auto"
+                    }
+                }),
+                EditorView.lineWrapping
+            ]
+        });
+        
+        const container = document.getElementById('code-editor-container');
+        if (container) {
+            // Clear container
+            container.innerHTML = '';
+            
+            // Create CodeMirror editor
+            codeEditor = new EditorView({
+                state: startState,
+                parent: container
+            });
+            
+            console.log('CodeMirror editor initialized successfully');
+            updateStatus('CodeMirror loaded', 'ready');
+            
+            // Hide fallback textarea
+            const fallback = document.getElementById('code-editor-fallback');
+            if (fallback) {
+                fallback.style.display = 'none';
+            }
+            
+            setTimeout(() => {
+                updateStatus('Ready', 'ready');
+            }, 2000);
+        }
+    } catch (error) {
+        console.error('Error setting up CodeMirror:', error);
+        setupFallbackEditor();
+    }
+}
+
+/**
+ * Set up fallback textarea editor if CodeMirror fails
+ */
+function setupFallbackEditor() {
+    console.log('Setting up fallback textarea editor');
+    
+    const container = document.getElementById('code-editor-container');
+    const fallback = document.getElementById('code-editor-fallback');
+    
+    if (container && fallback) {
+        fallback.style.display = 'block';
+        fallback.value = DEFAULT_CODE;
+        
+        console.log('Fallback editor ready');
+        updateStatus('Editor ready (fallback)', 'ready');
+    }
+}
 
 /**
  * Test initial connection to backend
@@ -147,9 +274,8 @@ async function handleRunCode() {
             runBtn.classList.add('loading');
         }
         
-        // Get code from editor
-        const codeEditor = document.getElementById('code-editor');
-        const code = codeEditor ? codeEditor.value.trim() : '';
+        // Get code from editor (CodeMirror or fallback)
+        const code = getCurrentCode();
         
         if (!code) {
             showOutput('Error: No code to execute.\nPlease enter some Python code in the editor.');
@@ -252,7 +378,7 @@ function handleExecutionError(result) {
 }
 
 /**
- * Handle Test Connection (using Check Answer button for Step 4)
+ * Handle Test Connection (using Check Answer button for Step 5)
  */
 async function handleTestConnection() {
     try {
@@ -268,7 +394,8 @@ async function handleTestConnection() {
             body: JSON.stringify({ 
                 test: 'frontend-backend-connection',
                 timestamp: new Date().toISOString(),
-                step: 4
+                step: 5,
+                editor: codeEditor ? 'CodeMirror' : 'fallback'
             })
         });
         
@@ -280,7 +407,8 @@ async function handleTestConnection() {
         console.log('Connection test result:', result);
         
         // Show success message in feedback
-        showFeedback(`✅ ${result.message}\n\nStep: ${result.step}\nTimestamp: ${result.timestamp}\nReceived data: ${JSON.stringify(result.received_data, null, 2)}\n\n🎉 Code execution pipeline is ready!\nTry running some Python code with the "Run Code" button.`);
+        const editorType = codeEditor ? 'CodeMirror' : 'fallback textarea';
+        showFeedback(`✅ ${result.message}\n\nStep: ${result.step}\nTimestamp: ${result.timestamp}\nEditor: ${editorType}\nReceived data: ${JSON.stringify(result.received_data, null, 2)}\n\n🎉 Enhanced code editor is ready!\n✨ Features: Syntax highlighting, line numbers, improved UX\nTry running some Python code with the "Run Code" button.`);
         updateStatus('Connection successful', 'ready');
         
         setTimeout(() => {
@@ -343,20 +471,37 @@ function showFeedback(text) {
 }
 
 /**
- * Utility function to get current code from editor
+ * Utility function to get current code from editor (CodeMirror or fallback)
  */
 function getCurrentCode() {
-    const codeEditor = document.getElementById('code-editor');
-    return codeEditor ? codeEditor.value.trim() : '';
+    if (codeEditor) {
+        // Get code from CodeMirror
+        return codeEditor.state.doc.toString();
+    } else {
+        // Get code from fallback textarea
+        const fallback = document.getElementById('code-editor-fallback');
+        return fallback ? fallback.value.trim() : '';
+    }
 }
 
 /**
- * Utility function to set code in editor
+ * Utility function to set code in editor (CodeMirror or fallback)
  */
 function setCode(code) {
-    const codeEditor = document.getElementById('code-editor');
     if (codeEditor) {
-        codeEditor.value = code;
+        // Set code in CodeMirror
+        const { EditorState } = window.CodeMirrorModules;
+        const newState = EditorState.create({
+            doc: code,
+            extensions: codeEditor.state.config.extensions
+        });
+        codeEditor.setState(newState);
+    } else {
+        // Set code in fallback textarea
+        const fallback = document.getElementById('code-editor-fallback');
+        if (fallback) {
+            fallback.value = code;
+        }
     }
 }
 
@@ -369,5 +514,6 @@ window.BhodiPlatform = {
     showFeedback,
     updateStatus,
     getCurrentCode,
-    setCode
+    setCode,
+    codeEditor: () => codeEditor
 }; 
