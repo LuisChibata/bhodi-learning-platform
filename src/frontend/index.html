@@ -6,55 +6,39 @@
     <title>Bhodi Learning Platform</title>
     <link rel="stylesheet" href="css/style.css">
     
-    <!-- CodeMirror 6 CSS -->
-    <style>
-        /* CodeMirror 6 integration styles */
-        .cm-editor {
-            height: 100%;
-            font-size: 14px;
-            border: none;
-            outline: none;
-        }
+    <!-- CodeMirror 5 CSS and JavaScript (CDN) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/default.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+    
+    <script>
+        // CodeMirror 5 loading
+        console.log('Loading CodeMirror 5...');
         
-        .cm-focused {
-            outline: none;
-        }
-        
-        .cm-editor .cm-scroller {
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-            line-height: 1.5;
-        }
-        
-        .cm-editor .cm-content {
-            padding: 1rem;
-            min-height: 100%;
-        }
-        
-        .cm-editor .cm-gutters {
-            background-color: #f8f9fa;
-            border-right: 1px solid #e9ecef;
-        }
-        
-        .cm-editor .cm-lineNumbers .cm-gutterElement {
-            color: #6c757d;
-            font-size: 13px;
-        }
-        
-        /* Dark theme variables for CodeMirror */
-        .cm-editor.cm-theme-dark {
-            background-color: #2d3748;
-            color: #e2e8f0;
-        }
-        
-        .cm-editor.cm-theme-dark .cm-gutters {
-            background-color: #1a202c;
-            border-right: 1px solid #4a5568;
-        }
-        
-        .cm-editor.cm-theme-dark .cm-lineNumbers .cm-gutterElement {
-            color: #a0aec0;
-        }
-    </style>
+        // Wait for DOM to be ready, then check if CodeMirror loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                if (typeof CodeMirror !== 'undefined') {
+                    console.log('CodeMirror 5 loaded successfully');
+                    
+                    window.CodeMirrorModules = {
+                        CodeMirror: CodeMirror,
+                        ready: true,
+                        version: 5
+                    };
+                    
+                    window.dispatchEvent(new CustomEvent('codemirror-loaded'));
+                } else {
+                    console.warn('CodeMirror 5 failed to load');
+                    window.dispatchEvent(new CustomEvent('codemirror-failed'));
+                }
+            }, 1000); // Give scripts time to load
+        });
+    </script>
 </head>
 <body>
     <!-- Header Navigation Bar -->
@@ -106,7 +90,7 @@
         <!-- Bottom Panels: Code Editor & Output -->
         <section class="bottom-panels">
             <!-- Code Editor Panel -->
-            <div class="code-panel">
+            <div class="code-panel code-editor-enhanced">
                 <div class="panel-header">
                     <h3>Code Editor <span class="editor-badge">Enhanced</span></h3>
                     <div class="code-actions">
@@ -173,27 +157,6 @@ The enhanced editor now features:
         </section>
     </main>
 
-    <!-- CodeMirror 6 JavaScript (ES Modules via CDN) -->
-    <script type="module">
-        // Import CodeMirror 6 modules
-        import { EditorView, basicSetup } from 'https://cdn.skypack.dev/@codemirror/basic-setup@0.20.0';
-        import { EditorState } from 'https://cdn.skypack.dev/@codemirror/state@6.3.3';
-        import { python } from 'https://cdn.skypack.dev/@codemirror/lang-python@6.1.3';
-        import { oneDark } from 'https://cdn.skypack.dev/@codemirror/theme-one-dark@6.1.2';
-        
-        // Make CodeMirror available globally
-        window.CodeMirrorModules = {
-            EditorView,
-            EditorState,
-            basicSetup,
-            python,
-            oneDark
-        };
-        
-        // Signal that CodeMirror is loaded
-        window.dispatchEvent(new CustomEvent('codemirror-loaded'));
-    </script>
-    
     <!-- Main JavaScript -->
     <script src="js/main.js"></script>
     <script src="js/visualizer.js"></script>

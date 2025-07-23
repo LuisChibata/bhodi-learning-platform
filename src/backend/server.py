@@ -38,7 +38,7 @@ def hello_world():
     return jsonify({
         "status": "success",
         "message": "Bhodi Learning Platform Backend is running!",
-        "step": "Step 5: Frontend Code Editor",
+        "step": "Step 6: Run Code Feature",
         "version": "1.0.0"
     })
 
@@ -50,7 +50,7 @@ def health_check():
     return jsonify({
         "status": "healthy",
         "service": "bhodi-learning-platform",
-        "step": 5
+        "step": 6
     })
 
 @app.route('/api/test-connection', methods=['POST'])
@@ -158,7 +158,7 @@ def execute_python_code(code):
                     "message": "Code executed successfully",
                     "output": stdout,
                     "execution_time": f"{execution_time:.3f}s",
-                    "step": "Step 5: Frontend Code Editor"
+                    "step": "Step 6: Run Code Feature"
                 }
             else:
                 # Runtime error

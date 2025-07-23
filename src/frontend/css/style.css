@@ -467,6 +467,139 @@ body {
     }
 }
 
+/* Enhanced button states and loading animations for Step 6 */
+
+/* Loading state for run button */
+.btn.loading {
+    position: relative;
+    color: transparent;
+    cursor: wait;
+}
+
+.btn.loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid transparent;
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* Success flash animation */
+.btn.success-flash {
+    background-color: #28a745 !important;
+    transform: scale(1.05);
+    transition: all 0.3s ease;
+}
+
+/* Keyboard shortcut activation feedback */
+.btn.keyboard-activated {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.3);
+    transition: all 0.1s ease;
+}
+
+/* Enhanced status indicators */
+.status-running {
+    color: #007bff;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.status-error {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.status-ready {
+    color: #28a745;
+}
+
+/* Pulse animation for running status */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.6; }
+    100% { opacity: 1; }
+}
+
+/* Spin animation for loading */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Enhanced output styling */
+#output-text, #feedback-text {
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    color: #333;
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+    border: 1px solid #e9ecef;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* Dark theme for output (optional enhancement) */
+@media (prefers-color-scheme: dark) {
+    #output-text, #feedback-text {
+        background-color: #2d3748;
+        color: #e2e8f0;
+        border-color: #4a5568;
+    }
+}
+
+/* CodeMirror 5 focus enhancement */
+.CodeMirror-focused {
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+    border-radius: 4px;
+}
+
+/* Button hover effects enhancement */
+.btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+}
+
+.btn:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Enhanced editor container */
+.code-editor-enhanced {
+    position: relative;
+}
+
+.code-editor-enhanced::before {
+    content: '💡 Tip: Use Ctrl+Enter to run code';
+    position: absolute;
+    top: -20px;
+    right: 0;
+    font-size: 12px;
+    color: #6c757d;
+    background: #fff;
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid #e9ecef;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.code-editor-enhanced:hover::before {
+    opacity: 1;
+}
+
 /* Responsive Design */
 @media (max-width: 1024px) {
     .top-panel {
