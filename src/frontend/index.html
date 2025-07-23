@@ -1,1 +1,92 @@
- 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bhodi Learning Platform</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Header Navigation Bar -->
+    <header class="header">
+        <div class="lesson-nav">
+            <select id="lesson-selector" class="lesson-selector">
+                <option value="1">Lesson 1: The First Room</option>
+            </select>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 0%"></div>
+            </div>
+            <div class="nav-buttons">
+                <button id="prev-btn" class="nav-btn" disabled>Previous</button>
+                <button id="next-btn" class="nav-btn" disabled>Next</button>
+            </div>
+        </div>
+        <div class="settings">
+            <button id="settings-btn" class="settings-btn">⚙️</button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <!-- Top Panel: Problem Statement & Visualizer -->
+        <section class="top-panel">
+            <div class="problem-statement">
+                <h2>Problem Statement</h2>
+                <div id="problem-content" class="problem-content">
+                    <p>Welcome to the Bhodi Learning Platform! This is where lesson instructions will appear.</p>
+                </div>
+            </div>
+            <div class="visualizer">
+                <h3>Inheritance Visualizer</h3>
+                <div id="inheritance-diagram" class="inheritance-diagram">
+                    <p>Class inheritance diagrams will appear here when you work with objects.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bottom Panels: Code Editor & Output -->
+        <section class="bottom-panels">
+            <!-- Code Editor Panel -->
+            <div class="code-panel">
+                <div class="panel-header">
+                    <h3>Code Editor</h3>
+                    <div class="code-actions">
+                        <button id="run-btn" class="action-btn primary">Run Code</button>
+                        <button id="check-btn" class="action-btn secondary">Check Answer</button>
+                    </div>
+                </div>
+                <div class="editor-container">
+                    <textarea id="code-editor" class="code-editor" placeholder="# Your Python code goes here...
+print('Hello, Bhodi!')"></textarea>
+                </div>
+                <div class="status-indicator">
+                    <span id="status-text" class="status-text">Ready</span>
+                </div>
+            </div>
+
+            <!-- Output & Feedback Panel -->
+            <div class="output-panel">
+                <div class="panel-header">
+                    <h3>Output & Feedback</h3>
+                    <div class="tab-buttons">
+                        <button id="output-tab" class="tab-btn active">Output</button>
+                        <button id="feedback-tab" class="tab-btn">Feedback</button>
+                    </div>
+                </div>
+                <div class="output-content">
+                    <div id="output-display" class="output-display active">
+                        <pre id="output-text">Click "Run Code" to see your program's output here.</pre>
+                    </div>
+                    <div id="feedback-display" class="feedback-display">
+                        <div id="feedback-text">Click "Check Answer" to see how your solution compares to the expected result.</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- JavaScript -->
+    <script src="js/main.js"></script>
+    <script src="js/visualizer.js"></script>
+</body>
+</html> 
