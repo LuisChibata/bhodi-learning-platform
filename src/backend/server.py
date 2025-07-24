@@ -69,7 +69,7 @@ def health_check():
     return jsonify({
         "status": "healthy",
         "service": "bhodi-learning-platform",
-        "step": 10,
+        "step": 11,
         "environment": os.environ.get('FLASK_ENV', 'development'),
         "code_execution": app.config['ENABLE_CODE_EXECUTION']
     })

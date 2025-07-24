@@ -261,68 +261,79 @@ input:focus {
     overflow: hidden;
 }
 
-/* Top Panel: Problem Statement & Visualizer - Enhanced */
-.top-panel {
+/* Problem Statement Panel - Full Width and Prominent */
+.problem-panel {
     background: var(--bg-primary);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-md);
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-md);
-    padding: var(--space-lg);
-    height: 40%;
-    overflow: hidden;
+    padding: var(--space-xl);
+    margin-bottom: var(--space-md);
     border: 1px solid var(--border-light);
+    border-left: 4px solid var(--primary-color);
 }
 
-.problem-statement, .visualizer {
+.problem-statement {
     display: flex;
     flex-direction: column;
 }
 
-.problem-statement h2, .visualizer h3 {
-    margin-bottom: var(--space-md);
+.problem-statement h2 {
+    margin-bottom: var(--space-lg);
     color: var(--text-primary);
     border-bottom: 3px solid var(--primary-color);
-    padding-bottom: var(--space-sm);
-    font-weight: 600;
-    font-size: var(--font-size-xl);
+    padding-bottom: var(--space-md);
+    font-weight: 700;
+    font-size: var(--font-size-2xl);
     background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    text-align: center;
 }
 
-.problem-content, .inheritance-diagram {
-    flex: 1;
-    overflow-y: auto;
-    padding: var(--space-md);
+.problem-content {
+    padding: var(--space-lg);
     background: var(--bg-secondary);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
     border: 1px solid var(--border-light);
     box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+    font-size: var(--font-size-lg);
+    line-height: 1.7;
 }
 
 .problem-content p {
-    margin-bottom: 1rem;
+    margin-bottom: var(--space-lg);
+    color: var(--text-primary);
+}
+
+.problem-content p:last-child {
+    margin-bottom: 0;
+}
+
+.problem-content strong {
+    color: var(--primary-color);
+    font-weight: 600;
 }
 
 .problem-content ul {
-    margin-left: 1.5rem;
-    margin-bottom: 1rem;
+    margin-left: var(--space-xl);
+    margin-bottom: var(--space-lg);
+    list-style-type: none;
 }
 
 .problem-content li {
-    margin-bottom: 0.5rem;
+    margin-bottom: var(--space-md);
+    position: relative;
+    padding-left: var(--space-md);
+    color: var(--text-secondary);
 }
 
-.inheritance-diagram {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    color: #666;
-    font-style: italic;
+.problem-content li::before {
+    content: "→";
+    position: absolute;
+    left: 0;
+    color: var(--primary-color);
+    font-weight: bold;
 }
 
 /* Bottom Panels: Code Editor & Output */
@@ -913,10 +924,9 @@ input:focus {
 }
 
 @media (max-width: 1024px) {
-    .top-panel {
-        grid-template-columns: 1fr;
-        height: 40%;
-        gap: 0.75rem;
+    .problem-panel {
+        padding: var(--space-lg);
+        margin-bottom: var(--space-sm);
     }
     
     .bottom-panels {
@@ -984,16 +994,20 @@ input:focus {
         gap: 0.5rem;
     }
     
-    .top-panel {
-        height: auto;
-        min-height: 250px;
-        padding: 1rem;
-        gap: 0.75rem;
+    .problem-panel {
+        padding: var(--space-md);
+        margin-bottom: var(--space-sm);
     }
     
-    .problem-statement h2, .visualizer h3 {
-        font-size: 1.1rem;
-        margin-bottom: 0.75rem;
+    .problem-statement h2 {
+        font-size: var(--font-size-xl);
+        margin-bottom: var(--space-md);
+        padding-bottom: var(--space-sm);
+    }
+    
+    .problem-content {
+        padding: var(--space-md);
+        font-size: var(--font-size-base);
     }
     
     .panel-header {
@@ -1053,18 +1067,24 @@ input:focus {
         gap: 0.25rem;
     }
     
-    .top-panel {
-        padding: 0.75rem;
-        min-height: 200px;
+    .problem-panel {
+        padding: var(--space-sm);
+        margin-bottom: var(--space-xs);
+    }
+    
+    .problem-statement h2 {
+        font-size: var(--font-size-lg);
+        margin-bottom: var(--space-sm);
+        text-align: left;
+    }
+    
+    .problem-content {
+        padding: var(--space-sm);
+        font-size: var(--font-size-sm);
     }
     
     .panel-header {
         padding: 0.5rem 0.75rem;
-    }
-    
-    .problem-content, .inheritance-diagram {
-        padding: 0.75rem;
-        font-size: 0.9rem;
     }
     
     .action-btn, .tab-btn {
