@@ -11,16 +11,8 @@ class Config:
     DEBUG = False
     TESTING = False
     
-    # CORS configuration with smart fallback
-    @property
-    def CORS_ORIGINS(self):
-        # Try environment variable first
-        env_origins = os.environ.get('CORS_ORIGINS')
-        if env_origins and env_origins.strip() and env_origins != '*':
-            return env_origins.split(',')
-        
-        # Fallback to sensible defaults for development/production
-        return ['*']  # Will be overridden in specific configs
+    # CORS configuration - will be set in __init__
+    CORS_ORIGINS = ['*']  # Default fallback
     
     # Code execution settings
     EXECUTION_TIMEOUT = int(os.environ.get('EXECUTION_TIMEOUT', '10'))
@@ -36,32 +28,34 @@ class Config:
 class DevelopmentConfig(Config):
     """Development configuration"""
     DEBUG = True
-    CORS_ORIGINS = ['http://localhost:8000', 'http://127.0.0.1:8000']
+    CORS_ORIGINS = ['http://localhost:8000', 'http://127.0.0.1:8000', 'https://bhodi-coding-plataform.netlify.app']
     LOG_LEVEL = 'DEBUG'
+
+# Helper function to get CORS origins with smart fallback
+def _get_production_cors_origins():
+    """Get CORS origins with smart fallback logic"""
+    # Try environment variable first
+    env_origins = os.environ.get('CORS_ORIGINS')
+    if env_origins and env_origins.strip() and env_origins != '*':
+        origins = [origin.strip() for origin in env_origins.split(',')]
+        # Ensure our Netlify domain is always included
+        netlify_domain = 'https://bhodi-coding-plataform.netlify.app'
+        if netlify_domain not in origins:
+            origins.append(netlify_domain)
+        return origins
+    
+    # Fallback to hard-coded production domains if env var fails
+    return [
+        'https://bhodi-coding-plataform.netlify.app',  # Current Netlify site
+        'https://luischibata.com',
+        'https://learn.luischibata.com', 
+        'https://bhodi.luischibata.com'
+    ]
 
 class ProductionConfig(Config):
     """Production configuration"""
     DEBUG = False
-    
-    @property  
-    def CORS_ORIGINS(self):
-        # Try environment variable first
-        env_origins = os.environ.get('CORS_ORIGINS')
-        if env_origins and env_origins.strip() and env_origins != '*':
-            origins = env_origins.split(',')
-            # Ensure our Netlify domain is always included
-            netlify_domain = 'https://bhodi-coding-plataform.netlify.app'
-            if netlify_domain not in origins:
-                origins.append(netlify_domain)
-            return origins
-        
-        # Fallback to hard-coded production domains if env var fails
-        return [
-            'https://bhodi-coding-plataform.netlify.app',  # Current Netlify site
-            'https://luischibata.com',
-            'https://learn.luischibata.com', 
-            'https://bhodi.luischibata.com'
-        ]
+    CORS_ORIGINS = _get_production_cors_origins()
     
     # Enhanced security for production
     EXECUTION_TIMEOUT = int(os.environ.get('EXECUTION_TIMEOUT', '5'))  # Shorter timeout in prod
