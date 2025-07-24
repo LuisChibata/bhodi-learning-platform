@@ -5,23 +5,37 @@
 
 // Environment detection and API configuration
 const ENVIRONMENT = {
+    hostname: window.location.hostname,
+    protocol: window.location.protocol,
     isDevelopment: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1',
-    isProduction: !window.location.hostname.includes('localhost'),
-    hostname: window.location.hostname
+    isProduction: window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
 };
 
 /**
  * Get the appropriate API base URL based on environment
  */
 function getApiBaseUrl() {
-    if (ENVIRONMENT.isDevelopment) {
-        return 'http://localhost:5000';
+    // Debug logging
+    console.log('🔍 Environment Detection Debug:');
+    console.log('  Hostname:', ENVIRONMENT.hostname);
+    console.log('  Protocol:', ENVIRONMENT.protocol);
+    console.log('  Is Development:', ENVIRONMENT.isDevelopment);
+    console.log('  Is Production:', ENVIRONMENT.isProduction);
+    
+    // Force production API for Netlify domains
+    if (ENVIRONMENT.hostname.includes('netlify.app') || 
+        ENVIRONMENT.hostname.includes('luischibata.com') ||
+        ENVIRONMENT.isProduction) {
+        
+        const productionApiUrl = 'https://bhodi-learning-backend.fly.dev';
+        console.log('🚀 Using Production API:', productionApiUrl);
+        return productionApiUrl;
     }
     
-    // Production API URL - deployed on Fly.io
-    const productionApiUrl = 'https://bhodi-learning-backend.fly.dev';
-    
-    return productionApiUrl;
+    // Development mode
+    const developmentApiUrl = 'http://localhost:5000';
+    console.log('🔧 Using Development API:', developmentApiUrl);
+    return developmentApiUrl;
 }
 
 // Set API base URL
