@@ -74,6 +74,57 @@ def health_check():
         "code_execution": app.config['ENABLE_CODE_EXECUTION']
     })
 
+@app.route('/lesson/<lesson_id>', methods=['GET'])
+def get_lesson(lesson_id):
+    """Get lesson content including problem statement, starter code, and solution"""
+    try:
+        # Construct lesson directory path (go up two levels from src/backend to project root)
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        lesson_dir = os.path.join(project_root, 'lessons', f'lesson_{lesson_id.zfill(2)}_the_first_room')
+        
+        if not os.path.exists(lesson_dir):
+            return jsonify({
+                "status": "error",
+                "message": f"Lesson {lesson_id} not found"
+            }), 404
+        
+        lesson_data = {}
+        
+        # Read problem statement
+        problem_path = os.path.join(lesson_dir, 'problem_statement.md')
+        if os.path.exists(problem_path):
+            with open(problem_path, 'r', encoding='utf-8') as f:
+                lesson_data['problem_statement'] = f.read()
+        else:
+            lesson_data['problem_statement'] = "Problem statement not found."
+        
+        # Read starter code
+        starter_path = os.path.join(lesson_dir, 'starter_code.py')
+        if os.path.exists(starter_path):
+            with open(starter_path, 'r', encoding='utf-8') as f:
+                lesson_data['starter_code'] = f.read()
+        else:
+            lesson_data['starter_code'] = "# Starter code not found"
+        
+        # Read solution (but don't expose it to frontend for now)
+        solution_path = os.path.join(lesson_dir, 'solution.py')
+        if os.path.exists(solution_path):
+            with open(solution_path, 'r', encoding='utf-8') as f:
+                lesson_data['_solution'] = f.read()  # Prefixed with _ to indicate internal use
+        
+        lesson_data['lesson_id'] = lesson_id
+        lesson_data['status'] = 'success'
+        
+        logger.info(f"Serving lesson {lesson_id} from {lesson_dir}")
+        return jsonify(lesson_data)
+        
+    except Exception as e:
+        logger.error(f"Error loading lesson {lesson_id}: {str(e)}")
+        return jsonify({
+            "status": "error",
+            "message": f"Error loading lesson: {str(e)}"
+        }), 500
+
 @app.route('/api/test-connection', methods=['POST'])
 def test_connection():
     """

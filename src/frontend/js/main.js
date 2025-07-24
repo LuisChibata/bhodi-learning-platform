@@ -70,6 +70,91 @@ print("🔄 Game continues whether you like it or not!")
 print("💡 Lesson: Sometimes the most obvious solution doesn't work...")
 print("   Keep learning to discover why!"`;
 
+// Current lesson data storage
+let currentLessonData = null;
+
+/**
+ * Load lesson content from the backend
+ */
+async function loadLesson(lessonId) {
+    try {
+        console.log(`📚 Loading lesson ${lessonId}...`);
+        
+        const response = await fetch(`${API_BASE_URL}/lesson/${lessonId}`);
+        const lessonData = await response.json();
+        
+        if (lessonData.status === 'error') {
+            throw new Error(lessonData.message);
+        }
+        
+        // Store lesson data globally
+        currentLessonData = lessonData;
+        
+        // Update problem statement
+        updateProblemStatement(lessonData.problem_statement);
+        
+        // Update code editor with starter code
+        updateCodeEditor(lessonData.starter_code);
+        
+        console.log(`✅ Lesson ${lessonId} loaded successfully`);
+        return lessonData;
+        
+    } catch (error) {
+        console.error(`❌ Error loading lesson ${lessonId}:`, error);
+        
+        // Show error in problem statement area
+        updateProblemStatement(`# Error Loading Lesson ${lessonId}\n\nUnable to load lesson content: ${error.message}\n\nPlease refresh the page or contact support.`);
+        
+        // Set fallback starter code
+        updateCodeEditor(`# Error: Could not load lesson ${lessonId}\nprint("Please refresh the page to try again")`);
+        
+        throw error;
+    }
+}
+
+/**
+ * Update the problem statement panel with markdown-like content
+ */
+function updateProblemStatement(markdown) {
+    const problemContent = document.getElementById('problem-content');
+    if (!problemContent) {
+        console.warn('Problem content element not found');
+        return;
+    }
+    
+    // Simple markdown-to-HTML conversion
+    let html = markdown
+        .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+        .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+        .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        .replace(/`(.+?)`/g, '<code>$1</code>')
+        .replace(/```([^`]+)```/g, '<pre><code>$1</code></pre>')
+        .replace(/^- (.+)$/gm, '<li>$1</li>')
+        .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
+        .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/^(?!<[hul]|<\/[hul]|<pre|<\/pre)(.+)$/gm, '<p>$1</p>');
+    
+    problemContent.innerHTML = html;
+}
+
+/**
+ * Update the code editor with new content
+ */
+function updateCodeEditor(code) {
+    if (codeEditor && codeEditor.setValue) {
+        codeEditor.setValue(code);
+        codeEditor.clearHistory(); // Clear undo history
+        console.log('📝 Code editor updated with lesson content');
+    } else {
+        console.warn('Code editor not initialized yet, will set content when ready');
+        // Store code for when editor is ready
+        window.pendingStarterCode = code;
+    }
+}
+
 /**
  * Initialize the application when DOM is loaded
  */
@@ -81,6 +166,11 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeButtons();
     initializeCodeEditor();
     testBackendConnection();
+    
+    // Load default lesson (Lesson 1)
+    loadLesson('01').catch(error => {
+        console.error('Failed to load default lesson:', error);
+    });
     
     console.log('✅ Platform initialization complete!');
 });
@@ -140,7 +230,7 @@ function setupCodeMirror() {
         
         // Create textarea for CodeMirror 5
         const textarea = document.createElement('textarea');
-        textarea.value = DEFAULT_CODE;
+        textarea.value = window.pendingStarterCode || DEFAULT_CODE;
         container.appendChild(textarea);
         
         // Create CodeMirror 5 editor
@@ -292,6 +382,7 @@ function initializeButtons() {
     const prevBtn = document.getElementById('prev-btn');
     const nextBtn = document.getElementById('next-btn');
     const settingsBtn = document.getElementById('settings-btn');
+    const lessonSelector = document.getElementById('lesson-selector');
     
     // Run Code button - now executes real Python code
     if (runBtn) {
@@ -325,6 +416,21 @@ function initializeButtons() {
         settingsBtn.addEventListener('click', () => {
             console.log('Settings - functionality will be added in Step 17');
             alert('Settings panel will be implemented in the UI Polish phase');
+        });
+    }
+    
+    // Lesson selector dropdown
+    if (lessonSelector) {
+        lessonSelector.addEventListener('change', async (e) => {
+            const selectedLessonId = e.target.value.padStart(2, '0'); // Ensure 2-digit format
+            console.log(`📚 User selected lesson ${selectedLessonId}`);
+            
+            try {
+                await loadLesson(selectedLessonId);
+            } catch (error) {
+                console.error(`Failed to load lesson ${selectedLessonId}:`, error);
+                alert(`Failed to load lesson ${selectedLessonId}. Please try again.`);
+            }
         });
     }
     
