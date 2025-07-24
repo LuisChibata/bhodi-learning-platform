@@ -508,10 +508,10 @@ function initializeButtons() {
         });
     }
     
-    // Check Answer button - test backend connection
+    // Check Answer button - check lesson solution
     if (checkBtn) {
         checkBtn.addEventListener('click', async () => {
-            await handleTestConnection();
+            await handleCheckAnswer();
         });
     }
     
@@ -866,7 +866,116 @@ function handleExecutionError(result, clientTime) {
 }
 
 /**
- * Handle Test Connection (using Check Answer button for Step 5)
+ * Handle Check Answer - check student solution against expected output
+ */
+async function handleCheckAnswer() {
+    try {
+        console.log('🎯 Checking student answer...');
+        updateStatus('Checking answer...', 'running');
+        
+        // Get current lesson ID and student code
+        if (!currentLessonData) {
+            throw new Error('No lesson loaded. Please load a lesson first.');
+        }
+        
+        const lessonId = currentLessonData.lesson_id;
+        const studentCode = codeEditor ? codeEditor.getValue() : '';
+        
+        if (!studentCode.trim()) {
+            throw new Error('Please write some code first before checking your answer.');
+        }
+        
+        console.log(`📝 Checking answer for lesson ${lessonId}`);
+        console.log(`📄 Student code: ${studentCode.length} characters`);
+        
+        // Send check request to backend
+        const response = await fetch(`${API_BASE_URL}/lesson/${lessonId}/check`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                code: studentCode
+            })
+        });
+        
+        console.log(`📡 Check response status: ${response.status} ${response.statusText}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        console.log(`📊 Check result:`, result);
+        
+        if (result.status === 'error') {
+            throw new Error(result.message || 'Unknown error occurred');
+        }
+        
+        // Display feedback based on result
+        displayAnswerFeedback(result);
+        
+        // Update status
+        if (result.correct) {
+            updateStatus('Solution correct!', 'success');
+        } else {
+            updateStatus('Try again', 'warning');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error checking answer:', error);
+        
+        const errorMessage = `❌ Error Checking Answer
+        
+${error.message}
+
+Please try again or contact support if the problem persists.`;
+        
+        showFeedback(errorMessage);
+        updateStatus('Check failed', 'error');
+    }
+}
+
+/**
+ * Display answer feedback to the user
+ */
+function displayAnswerFeedback(result) {
+    console.log('📋 Displaying answer feedback');
+    
+    let feedbackMessage = '';
+    
+    // Header with result
+    if (result.correct) {
+        feedbackMessage += `${result.message}\n\n`;
+    } else {
+        feedbackMessage += `${result.message}\n\n`;
+    }
+    
+    // Main feedback content
+    if (result.feedback) {
+        feedbackMessage += `${result.feedback}\n\n`;
+    }
+    
+    // Show outputs comparison if available
+    if (result.student_output !== undefined && result.expected_output !== undefined) {
+        feedbackMessage += `--- Your Output ---\n${result.student_output || '(no output)'}\n\n`;
+        feedbackMessage += `--- Expected Output ---\n${result.expected_output}\n\n`;
+    }
+    
+    // Add hints if available
+    if (result.hints && result.hints.length > 0) {
+        feedbackMessage += `💡 Hints:\n`;
+        result.hints.forEach((hint, index) => {
+            feedbackMessage += `${index + 1}. ${hint}\n`;
+        });
+    }
+    
+    // Display in feedback tab
+    showFeedback(feedbackMessage);
+}
+
+/**
+ * Handle Test Connection (legacy function for debugging)
  */
 async function handleTestConnection() {
     try {

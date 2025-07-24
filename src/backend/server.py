@@ -144,6 +144,203 @@ def get_lesson(lesson_id):
             "message": f"Error loading lesson: {str(e)}"
         }), 500
 
+@app.route('/lesson/<lesson_id>/check', methods=['POST'])
+def check_lesson_answer(lesson_id):
+    """Check student's solution against the expected solution"""
+    try:
+        # Get student code from request
+        data = request.get_json()
+        if not data or 'code' not in data:
+            return jsonify({
+                "status": "error",
+                "message": "No code provided",
+                "error_type": "input_error"
+            }), 400
+        
+        student_code = data['code'].strip()
+        if not student_code:
+            return jsonify({
+                "status": "error",
+                "message": "Empty code provided",
+                "error_type": "input_error"
+            }), 400
+        
+        logger.info(f"📝 Checking answer for lesson {lesson_id}")
+        logger.info(f"📄 Student code length: {len(student_code)} characters")
+        
+        # Load lesson solution
+        lesson_data = _load_lesson_data(lesson_id)
+        if not lesson_data:
+            return jsonify({
+                "status": "error",
+                "message": f"Lesson {lesson_id} not found",
+                "error_type": "lesson_not_found"
+            }), 404
+        
+        # Execute student code and get output
+        student_result = _execute_code_safely(student_code)
+        logger.info(f"🏃 Student code execution result: {student_result['status']}")
+        
+        if student_result['status'] == 'error':
+            return jsonify({
+                "status": "error",
+                "message": "Your code has errors that need to be fixed first",
+                "feedback": f"Please fix these errors before checking your answer:\n\n{student_result.get('error_output', 'Unknown error')}",
+                "error_type": "execution_error",
+                "student_output": "",
+                "expected_output": ""
+            })
+        
+        # Execute solution code and get expected output  
+        solution_result = _execute_code_safely(lesson_data.get('_solution', ''))
+        logger.info(f"✅ Solution code execution result: {solution_result['status']}")
+        
+        if solution_result['status'] == 'error':
+            logger.error(f"❌ Solution code has errors: {solution_result.get('error_output')}")
+            return jsonify({
+                "status": "error", 
+                "message": "Internal error: solution code has problems",
+                "error_type": "solution_error"
+            }), 500
+        
+        # Compare outputs and generate feedback
+        student_output = student_result.get('output', '').strip()
+        expected_output = solution_result.get('output', '').strip()
+        
+        feedback_result = _generate_lesson_feedback(
+            lesson_id=lesson_id,
+            student_code=student_code,
+            student_output=student_output,
+            expected_output=expected_output,
+            lesson_data=lesson_data
+        )
+        
+        logger.info(f"📊 Feedback generated: {feedback_result['status']}")
+        
+        return jsonify(feedback_result)
+        
+    except Exception as e:
+        logger.error(f"❌ Error checking lesson {lesson_id}: {str(e)}")
+        return jsonify({
+            "status": "error",
+            "message": f"Error checking answer: {str(e)}",
+            "error_type": "server_error"
+        }), 500
+
+def _load_lesson_data(lesson_id):
+    """Load lesson data (reusable from get_lesson)"""
+    try:
+        # Same path logic as get_lesson
+        if os.path.exists('lessons'):
+            lesson_dir = os.path.join('lessons', f'lesson_{lesson_id.zfill(2)}_the_first_room')
+        else:
+            project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+            lesson_dir = os.path.join(project_root, 'lessons', f'lesson_{lesson_id.zfill(2)}_the_first_room')
+        
+        if not os.path.exists(lesson_dir):
+            return None
+        
+        lesson_data = {"lesson_id": lesson_id}
+        
+        # Load solution - prefer solution_check.py for automated checking
+        solution_check_path = os.path.join(lesson_dir, 'solution_check.py')
+        solution_path = os.path.join(lesson_dir, 'solution.py')
+        
+        if os.path.exists(solution_check_path):
+            with open(solution_check_path, 'r', encoding='utf-8') as f:
+                lesson_data['_solution'] = f.read()
+                logger.info(f"Using solution_check.py for lesson {lesson_id}")
+        elif os.path.exists(solution_path):
+            with open(solution_path, 'r', encoding='utf-8') as f:
+                lesson_data['_solution'] = f.read()
+                logger.info(f"Using solution.py for lesson {lesson_id}")
+        else:
+            logger.warning(f"No solution file found for lesson {lesson_id}")
+        
+        # Load problem statement for context
+        problem_path = os.path.join(lesson_dir, 'problem_statement.md')
+        if os.path.exists(problem_path):
+            with open(problem_path, 'r', encoding='utf-8') as f:
+                lesson_data['problem_statement'] = f.read()
+        
+        return lesson_data
+        
+    except Exception as e:
+        logger.error(f"Error loading lesson data for {lesson_id}: {str(e)}")
+        return None
+
+def _execute_code_safely(code):
+    """Execute code safely and return result (reusable from execute_python_code)"""
+    return execute_python_code(code, timeout=5)  # Use existing execute_python_code function
+
+def _generate_lesson_feedback(lesson_id, student_code, student_output, expected_output, lesson_data):
+    """Generate educational feedback for lesson answers"""
+    
+    # Check if outputs match exactly
+    outputs_match = student_output == expected_output
+    
+    if outputs_match:
+        return {
+            "status": "success",
+            "correct": True,
+            "message": "🎉 Excellent work! Your solution is correct!",
+            "feedback": _get_success_feedback(lesson_id, student_code),
+            "student_output": student_output,
+            "expected_output": expected_output,
+            "hints": []
+        }
+    
+    # Generate specific feedback for incorrect solutions
+    feedback_parts = []
+    hints = []
+    
+    # Analyze what went wrong
+    if not student_output:
+        feedback_parts.append("❌ Your code didn't produce any output.")
+        hints.append("Make sure you're using print() statements to display messages.")
+    elif "quit" not in student_code.lower():
+        feedback_parts.append("🔍 I don't see any code that handles the 'quit' input.")
+        hints.append("Remember to use input() to get the user's choice and check if they typed 'quit'.")
+    elif "input(" not in student_code:
+        feedback_parts.append("📝 Your code is missing the input() function to get user input.")
+        hints.append("You need to ask the user what they want to do using input().")
+    elif "if" not in student_code:
+        feedback_parts.append("🤔 You need to use an if statement to check what the user typed.")
+        hints.append("Use 'if choice == \"quit\":' to check if they want to quit.")
+    else:
+        feedback_parts.append("🎯 Your code structure looks good, but the output doesn't match exactly.")
+        hints.append("Compare your output with the expected output below.")
+    
+    feedback_message = "\n".join(feedback_parts)
+    
+    return {
+        "status": "success", 
+        "correct": False,
+        "message": "📚 Not quite right, but you're learning!",
+        "feedback": feedback_message,
+        "student_output": student_output,
+        "expected_output": expected_output,
+        "hints": hints
+    }
+
+def _get_success_feedback(lesson_id, student_code):
+    """Get encouraging feedback for correct solutions"""
+    if lesson_id == '01':
+        feedback_parts = [
+            "🎮 Perfect! You've created your first 'unquittable' program!",
+            "",
+            "Key concepts you've mastered:",
+            "✅ Using print() to display messages",  
+            "✅ Getting user input with input()",
+            "✅ Storing user responses in variables",
+            "✅ Making decisions with if/else statements",
+            "",
+            "🚀 You're ready for the next lesson where we'll make quitting even more entertaining!"
+        ]
+        return "\n".join(feedback_parts)
+    
+    return "Great job! You've successfully completed this lesson."
+
 @app.route('/api/test-connection', methods=['POST'])
 def test_connection():
     """
