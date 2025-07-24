@@ -25,7 +25,7 @@
 
 ---
 
-## 🔄 Remaining Steps (11-12)
+## 🔄 Remaining Steps (11-13)
 
 ## ✅ Step 8: Lesson Content System - COMPLETED
 **Goal**: Load lesson content dynamically (problem statement, starter code)
@@ -67,7 +67,24 @@
 
 ---
 
-## Step 11: Advanced Navigation & Progress Tracking
+## Step 11: UI Layout Modernization
+**Goal**: Redesign UI layout to match actual lesson content and optimize learning experience
+**Success Criteria**: Content-focused layout with problem statement prominence, no unnecessary components
+**Test Method**: Verify improved information hierarchy, mobile experience, and learning flow
+**Status**: 📋 PLANNING PHASE - Implementation not yet started
+
+### Implementation:
+- Remove Inheritance Visualizer (not needed for basic Python lessons)
+- Redesign information architecture with problem statement as primary focus
+- Implement vertical flow layout (Problem → Code → Output)
+- Optimize mobile experience with natural stacking
+- Maintain all existing functionality and accessibility
+
+**Detailed Plan**: See `STEP_11_UI_LAYOUT_MODERNIZATION.md`
+
+---
+
+## Step 12: Advanced Navigation & Progress Tracking
 **Goal**: Implement lesson navigation and progress persistence
 **Success Criteria**: Students can navigate between lessons and track progress
 **Test Method**: Navigate through lessons, verify progress saves and restores
@@ -80,7 +97,7 @@
 
 ---
 
-## Step 12: Final Testing & Deployment Optimization
+## Step 13: Final Testing & Deployment Optimization
 **Goal**: Production-ready platform with comprehensive testing and performance optimization
 **Success Criteria**: Platform works flawlessly for real students with optimal performance
 **Test Method**: End-to-end testing with actual lesson completion, performance benchmarks
