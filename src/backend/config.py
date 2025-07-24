@@ -36,6 +36,7 @@ class ProductionConfig(Config):
     DEBUG = False
     # Production CORS origins - update these with your actual domains
     CORS_ORIGINS = [
+        'https://bhodi-coding-plataform.netlify.app',  # Current Netlify site
         'https://luischibata.com',
         'https://learn.luischibata.com',
         'https://bhodi.luischibata.com'
