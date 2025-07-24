@@ -28,8 +28,17 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Initialize CORS with configuration
-CORS(app, origins=app.config['CORS_ORIGINS'])
+# Initialize CORS with explicit configuration
+cors_origins = app.config['CORS_ORIGINS']
+logger.info(f"CORS Origins from config: {cors_origins}")
+
+# Handle CORS configuration more explicitly
+if cors_origins == ['*']:
+    logger.info("Configuring CORS for all origins")
+    CORS(app, origins="*", methods=["GET", "POST", "OPTIONS"], allow_headers=["Content-Type"])
+else:
+    logger.info(f"Configuring CORS for specific origins: {cors_origins}")
+    CORS(app, origins=cors_origins, methods=["GET", "POST", "OPTIONS"], allow_headers=["Content-Type"])
 
 logger.info(f"Starting Bhodi Learning Platform Backend")
 logger.info(f"Environment: {os.environ.get('FLASK_ENV', 'development')}")
