@@ -551,7 +551,7 @@ def execute_python_code(code, timeout=None):
         try:
             
             result = subprocess.run(
-                [sys.executable, temp_file_path],
+                [sys.executable, "-W", "ignore", temp_file_path],  # Ignore warnings
                 input=simulated_input,  # Provide stdin input
                 capture_output=True,
                 text=True,
