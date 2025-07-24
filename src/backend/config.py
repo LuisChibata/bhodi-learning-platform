@@ -11,8 +11,16 @@ class Config:
     DEBUG = False
     TESTING = False
     
-    # CORS configuration for production
-    CORS_ORIGINS = os.environ.get('CORS_ORIGINS', '*').split(',')
+    # CORS configuration with smart fallback
+    @property
+    def CORS_ORIGINS(self):
+        # Try environment variable first
+        env_origins = os.environ.get('CORS_ORIGINS')
+        if env_origins and env_origins.strip() and env_origins != '*':
+            return env_origins.split(',')
+        
+        # Fallback to sensible defaults for development/production
+        return ['*']  # Will be overridden in specific configs
     
     # Code execution settings
     EXECUTION_TIMEOUT = int(os.environ.get('EXECUTION_TIMEOUT', '10'))
@@ -34,13 +42,26 @@ class DevelopmentConfig(Config):
 class ProductionConfig(Config):
     """Production configuration"""
     DEBUG = False
-    # Production CORS origins - update these with your actual domains
-    CORS_ORIGINS = [
-        'https://bhodi-coding-plataform.netlify.app',  # Current Netlify site
-        'https://luischibata.com',
-        'https://learn.luischibata.com',
-        'https://bhodi.luischibata.com'
-    ]
+    
+    @property  
+    def CORS_ORIGINS(self):
+        # Try environment variable first
+        env_origins = os.environ.get('CORS_ORIGINS')
+        if env_origins and env_origins.strip() and env_origins != '*':
+            origins = env_origins.split(',')
+            # Ensure our Netlify domain is always included
+            netlify_domain = 'https://bhodi-coding-plataform.netlify.app'
+            if netlify_domain not in origins:
+                origins.append(netlify_domain)
+            return origins
+        
+        # Fallback to hard-coded production domains if env var fails
+        return [
+            'https://bhodi-coding-plataform.netlify.app',  # Current Netlify site
+            'https://luischibata.com',
+            'https://learn.luischibata.com', 
+            'https://bhodi.luischibata.com'
+        ]
     
     # Enhanced security for production
     EXECUTION_TIMEOUT = int(os.environ.get('EXECUTION_TIMEOUT', '5'))  # Shorter timeout in prod
