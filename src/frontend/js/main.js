@@ -500,6 +500,7 @@ function initializeButtons() {
     const nextBtn = document.getElementById('next-btn');
     const settingsBtn = document.getElementById('settings-btn');
     const lessonSelector = document.getElementById('lesson-selector');
+    const minimizeBtn = document.getElementById('minimize-problem-btn');
     
     // Run Code button - now executes real Python code
     if (runBtn) {
@@ -512,6 +513,13 @@ function initializeButtons() {
     if (checkBtn) {
         checkBtn.addEventListener('click', async () => {
             await handleCheckAnswer();
+        });
+    }
+    
+    // Minimize Problem Statement button
+    if (minimizeBtn) {
+        minimizeBtn.addEventListener('click', () => {
+            toggleProblemStatement();
         });
     }
     
@@ -580,6 +588,12 @@ function setupKeyboardShortcuts() {
             focusCodeEditor();
         }
         
+        // Ctrl+H to toggle problem statement
+        if ((event.ctrlKey || event.metaKey) && event.key === 'h') {
+            event.preventDefault();
+            toggleProblemStatement();
+        }
+        
         // Escape to clear output
         if (event.key === 'Escape') {
             event.preventDefault();
@@ -590,6 +604,7 @@ function setupKeyboardShortcuts() {
     console.log('Keyboard shortcuts enabled:');
     console.log('• Ctrl+Enter: Run code');
     console.log('• Ctrl+/: Focus code editor');
+    console.log('• Ctrl+H: Toggle problem statement');
     console.log('• Escape: Clear output');
 }
 
@@ -626,6 +641,43 @@ function clearOutput() {
     
     updateStatus('Ready', 'ready');
     console.log('Output and feedback cleared');
+}
+
+/**
+ * Toggle problem statement minimize/maximize
+ */
+function toggleProblemStatement() {
+    const problemPanel = document.querySelector('.problem-panel');
+    const minimizeBtn = document.getElementById('minimize-problem-btn');
+    const minimizeIcon = minimizeBtn?.querySelector('.minimize-icon');
+    
+    if (!problemPanel || !minimizeBtn || !minimizeIcon) {
+        console.error('Problem statement elements not found');
+        return;
+    }
+    
+    const isMinimized = problemPanel.classList.contains('minimized');
+    
+    if (isMinimized) {
+        // Restore the problem statement
+        problemPanel.classList.remove('minimized');
+        minimizeIcon.textContent = '−';
+        minimizeBtn.setAttribute('aria-label', 'Minimize problem statement to focus on coding');
+        minimizeBtn.setAttribute('title', 'Minimize (Ctrl+H)');
+        console.log('Problem statement restored');
+    } else {
+        // Minimize the problem statement
+        problemPanel.classList.add('minimized');
+        minimizeIcon.textContent = '+';
+        minimizeBtn.setAttribute('aria-label', 'Restore problem statement');
+        minimizeBtn.setAttribute('title', 'Restore (Ctrl+H)');
+        console.log('Problem statement minimized - focus on coding!');
+        
+        // Auto-focus the code editor when minimizing
+        setTimeout(() => {
+            focusCodeEditor();
+        }, 300);
+    }
 }
 
 /**

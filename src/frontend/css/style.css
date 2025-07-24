@@ -258,7 +258,8 @@ input:focus {
     flex-direction: column;
     gap: var(--space-md);
     padding: var(--space-md);
-    overflow: hidden;
+    overflow-y: auto;
+    height: calc(100vh - 120px); /* Account for header height */
 }
 
 /* Problem Statement Panel - Full Width and Prominent */
@@ -277,18 +278,85 @@ input:focus {
     flex-direction: column;
 }
 
-.problem-statement h2 {
+/* Problem Header with Minimize Button */
+.problem-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: var(--space-lg);
-    color: var(--text-primary);
     border-bottom: 3px solid var(--primary-color);
     padding-bottom: var(--space-md);
+}
+
+.problem-statement h2 {
+    color: var(--text-primary);
     font-weight: 700;
     font-size: var(--font-size-2xl);
     background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    text-align: center;
+    margin: 0;
+}
+
+/* Minimize Button */
+.minimize-btn {
+    background: var(--primary-color);
+    color: var(--text-light);
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition-normal);
+    font-size: var(--font-size-lg);
+    font-weight: bold;
+    box-shadow: var(--shadow-sm);
+}
+
+.minimize-btn:hover {
+    background: var(--primary-hover);
+    transform: scale(1.1);
+    box-shadow: var(--shadow-md);
+}
+
+.minimize-btn:active {
+    transform: scale(0.95);
+}
+
+.minimize-icon {
+    line-height: 1;
+    transition: var(--transition-normal);
+}
+
+/* Minimized State */
+.problem-panel.minimized {
+    margin-bottom: var(--space-sm);
+}
+
+.problem-panel.minimized .problem-content {
+    display: none;
+}
+
+.problem-panel.minimized .problem-header {
+    margin-bottom: 0;
+    padding-bottom: var(--space-sm);
+}
+
+.problem-panel.minimized .minimize-icon {
+    transform: rotate(180deg);
+}
+
+/* Restore Button when minimized */
+.problem-panel.minimized .minimize-btn {
+    background: var(--success-color);
+}
+
+.problem-panel.minimized .minimize-btn:hover {
+    background: var(--success-hover);
 }
 
 .problem-content {
@@ -341,17 +409,19 @@ input:focus {
     flex: 1;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    min-height: 0;
+    gap: var(--space-md);
+    min-height: 400px;
+    height: auto;
 }
 
 .code-panel, .output-panel {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    background: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-light);
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    min-height: 0;
 }
 
 .panel-header {
@@ -605,6 +675,7 @@ input:focus {
     flex: 1;
     position: relative;
     overflow: hidden;
+    min-height: 0;
 }
 
 .output-display, .feedback-display {
@@ -613,9 +684,11 @@ input:focus {
     left: 0;
     right: 0;
     bottom: 0;
-    padding: 1rem;
+    padding: var(--space-md);
     overflow-y: auto;
     display: none;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-medium) var(--bg-secondary);
 }
 
 .output-display.active, .feedback-display.active {
@@ -999,10 +1072,19 @@ input:focus {
         margin-bottom: var(--space-sm);
     }
     
-    .problem-statement h2 {
-        font-size: var(--font-size-xl);
+    .problem-header {
         margin-bottom: var(--space-md);
         padding-bottom: var(--space-sm);
+    }
+    
+    .problem-statement h2 {
+        font-size: var(--font-size-xl);
+    }
+    
+    .minimize-btn {
+        width: 28px;
+        height: 28px;
+        font-size: var(--font-size-base);
     }
     
     .problem-content {
@@ -1072,10 +1154,19 @@ input:focus {
         margin-bottom: var(--space-xs);
     }
     
+    .problem-header {
+        margin-bottom: var(--space-sm);
+        padding-bottom: var(--space-xs);
+    }
+    
     .problem-statement h2 {
         font-size: var(--font-size-lg);
-        margin-bottom: var(--space-sm);
-        text-align: left;
+    }
+    
+    .minimize-btn {
+        width: 24px;
+        height: 24px;
+        font-size: var(--font-size-sm);
     }
     
     .problem-content {
