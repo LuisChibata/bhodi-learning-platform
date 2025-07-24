@@ -40,32 +40,36 @@
     </script>
 </head>
 <body>
+    <!-- Skip to main content for keyboard navigation -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    
     <!-- Header Navigation Bar -->
-    <header class="header">
+    <header class="header" role="banner">
         <div class="lesson-nav">
-            <select id="lesson-selector" class="lesson-selector">
+            <label for="lesson-selector" class="sr-only">Select Lesson</label>
+            <select id="lesson-selector" class="lesson-selector" aria-label="Select lesson to study">
                 <option value="1">Lesson 1: The First Room</option>
             </select>
-            <div class="progress-bar">
+            <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Lesson progress">
                 <div class="progress-fill" style="width: 0%"></div>
             </div>
-            <div class="nav-buttons">
-                <button id="prev-btn" class="nav-btn" disabled>Previous</button>
-                <button id="next-btn" class="nav-btn" disabled>Next</button>
+            <div class="nav-buttons" role="group" aria-label="Lesson navigation">
+                <button id="prev-btn" class="nav-btn" disabled aria-label="Go to previous lesson">Previous</button>
+                <button id="next-btn" class="nav-btn" disabled aria-label="Go to next lesson">Next</button>
             </div>
         </div>
         <div class="settings">
-            <button id="settings-btn" class="settings-btn">⚙️</button>
+            <button id="settings-btn" class="settings-btn" aria-label="Open settings menu" title="Settings">⚙️</button>
         </div>
     </header>
 
     <!-- Main Content Area -->
-    <main class="main-content">
+    <main id="main-content" class="main-content" role="main">
         <!-- Top Panel: Problem Statement & Visualizer -->
-        <section class="top-panel">
-            <div class="problem-statement">
-                <h2>Problem Statement</h2>
-                <div id="problem-content" class="problem-content">
+        <section class="top-panel" aria-label="Learning content">
+            <div class="problem-statement" role="region" aria-labelledby="problem-heading">
+                <h2 id="problem-heading">Problem Statement</h2>
+                <div id="problem-content" class="problem-content" role="article" tabindex="0" aria-live="polite">
                     <p><strong>Step 5: Frontend Code Editor</strong></p>
                     <p>Welcome to the enhanced Bhodi Learning Platform! We've upgraded the code editor with syntax highlighting and better editing features.</p>
                     <p><strong>Try the new editor:</strong></p>
@@ -78,30 +82,35 @@
                     <p>The editor now provides a professional coding experience with all the features you'd expect from a modern development environment.</p>
                 </div>
             </div>
-            <div class="visualizer">
-                <h3>Inheritance Visualizer</h3>
-                <div id="inheritance-diagram" class="inheritance-diagram">
+            <div class="visualizer" role="region" aria-labelledby="visualizer-heading">
+                <h3 id="visualizer-heading">Inheritance Visualizer</h3>
+                <div id="inheritance-diagram" class="inheritance-diagram" role="img" aria-label="Class inheritance diagram display area" tabindex="0">
                     <p>Class inheritance diagrams will appear here when you work with objects.</p>
                 </div>
             </div>
         </section>
 
         <!-- Bottom Panels: Code Editor & Output -->
-        <section class="bottom-panels">
+        <section class="bottom-panels" aria-label="Code editor and output">
             <!-- Code Editor Panel -->
-            <div class="code-panel code-editor-enhanced">
+            <div class="code-panel code-editor-enhanced" role="region" aria-labelledby="code-editor-heading">
                 <div class="panel-header">
-                    <h3>Code Editor <span class="editor-badge">Enhanced</span></h3>
-                    <div class="code-actions">
-                        <button id="run-btn" class="action-btn primary">Run Code</button>
-                        <button id="check-btn" class="action-btn secondary">Check Answer</button>
+                    <h3 id="code-editor-heading">Code Editor <span class="editor-badge">Enhanced</span></h3>
+                    <div class="code-actions" role="group" aria-label="Code execution controls">
+                        <button id="run-btn" class="action-btn primary" aria-label="Execute Python code (Ctrl+Enter)" title="Run Code (Ctrl+Enter)">Run Code</button>
+                        <button id="check-btn" class="action-btn secondary" aria-label="Check answer against expected solution" title="Check Answer">Check Answer</button>
                     </div>
                 </div>
-                <div class="editor-container">
+                <div class="editor-container" role="group" aria-label="Python code editor">
                     <!-- CodeMirror will replace this div -->
-                    <div id="code-editor-container">
+                    <div id="code-editor-container" aria-label="Python code input area">
                         <!-- Fallback textarea for browsers without JavaScript -->
-                        <textarea id="code-editor-fallback" class="code-editor" style="display: none;"># Step 5: Enhanced Code Editor Test
+                        <label for="code-editor-fallback" class="sr-only">Python code editor</label>
+                        <textarea id="code-editor-fallback" 
+                                  class="code-editor" 
+                                  style="display: none;"
+                                  aria-label="Python code editor - fallback mode"
+                                  placeholder="Write your Python code here..."># Step 5: Enhanced Code Editor Test
 # Try the new CodeMirror editor with syntax highlighting!
 
 print("Hello, Bhodi!")
@@ -124,23 +133,23 @@ for i in range(1, 6):
 print("Enhanced editor test complete!")</textarea>
                     </div>
                 </div>
-                <div class="status-indicator">
+                <div class="status-indicator" role="status" aria-live="polite">
                     <span id="status-text" class="status-text">Ready</span>
                 </div>
             </div>
 
             <!-- Output & Feedback Panel -->
-            <div class="output-panel">
+            <div class="output-panel" role="region" aria-labelledby="output-heading">
                 <div class="panel-header">
-                    <h3>Output & Feedback</h3>
-                    <div class="tab-buttons">
-                        <button id="output-tab" class="tab-btn active">Output</button>
-                        <button id="feedback-tab" class="tab-btn">Feedback</button>
+                    <h3 id="output-heading">Output & Feedback</h3>
+                    <div class="tab-buttons" role="tablist" aria-label="Output and feedback tabs">
+                        <button id="output-tab" class="tab-btn active" role="tab" aria-selected="true" aria-controls="output-display" tabindex="0">Output</button>
+                        <button id="feedback-tab" class="tab-btn" role="tab" aria-selected="false" aria-controls="feedback-display" tabindex="-1">Feedback</button>
                     </div>
                 </div>
                 <div class="output-content">
-                    <div id="output-display" class="output-display active">
-                        <pre id="output-text">Click "Run Code" to see your program's output here.
+                    <div id="output-display" class="output-display active" role="tabpanel" aria-labelledby="output-tab" tabindex="0">
+                        <pre id="output-text" aria-live="polite" aria-label="Program output">Click "Run Code" to see your program's output here.
 
 The enhanced editor now features:
 ✨ Syntax highlighting for Python
@@ -148,8 +157,8 @@ The enhanced editor now features:
 🔍 Better code readability
 ⌨️ Professional editing experience</pre>
                     </div>
-                    <div id="feedback-display" class="feedback-display">
-                        <div id="feedback-text">Click "Check Answer" to test the backend connection and see how your solution compares to the expected result.</div>
+                    <div id="feedback-display" class="feedback-display" role="tabpanel" aria-labelledby="feedback-tab" tabindex="0" aria-hidden="true">
+                        <div id="feedback-text" aria-live="polite" aria-label="Answer feedback">Click "Check Answer" to test the backend connection and see how your solution compares to the expected result.</div>
                     </div>
                 </div>
             </div>
