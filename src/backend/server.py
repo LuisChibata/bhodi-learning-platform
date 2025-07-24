@@ -78,14 +78,33 @@ def health_check():
 def get_lesson(lesson_id):
     """Get lesson content including problem statement, starter code, and solution"""
     try:
-        # Construct lesson directory path (go up two levels from src/backend to project root)
-        project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-        lesson_dir = os.path.join(project_root, 'lessons', f'lesson_{lesson_id.zfill(2)}_the_first_room')
+        # Construct lesson directory path
+        # In development: go up two levels from src/backend to project root
+        # In production: lessons are copied to ./lessons/ in the container
+        if os.path.exists('lessons'):
+            # Production: lessons directory is in current working directory
+            lesson_dir = os.path.join('lessons', f'lesson_{lesson_id.zfill(2)}_the_first_room')
+            logger.info(f"Using production lesson path: {lesson_dir}")
+        else:
+            # Development: go up two levels from src/backend to project root
+            project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+            lesson_dir = os.path.join(project_root, 'lessons', f'lesson_{lesson_id.zfill(2)}_the_first_room')
+            logger.info(f"Using development lesson path: {lesson_dir}")
+        
+        logger.info(f"Looking for lesson directory: {lesson_dir}")
+        logger.info(f"Current working directory: {os.getcwd()}")
+        logger.info(f"Directory contents: {os.listdir('.')}")
         
         if not os.path.exists(lesson_dir):
+            logger.error(f"Lesson directory not found: {lesson_dir}")
             return jsonify({
                 "status": "error",
-                "message": f"Lesson {lesson_id} not found"
+                "message": f"Lesson {lesson_id} not found",
+                "debug_info": {
+                    "searched_path": lesson_dir,
+                    "cwd": os.getcwd(),
+                    "directory_contents": os.listdir('.') if os.path.exists('.') else "No current directory"
+                }
             }), 404
         
         lesson_data = {}
