@@ -78,13 +78,21 @@ let currentLessonData = null;
  */
 async function loadLesson(lessonId) {
     try {
-        console.log(`📚 Loading lesson ${lessonId}...`);
+        const lessonUrl = `${API_BASE_URL}/lesson/${lessonId}`;
+        console.log(`📚 Loading lesson ${lessonId} from: ${lessonUrl}`);
         
-        const response = await fetch(`${API_BASE_URL}/lesson/${lessonId}`);
+        const response = await fetch(lessonUrl);
+        console.log(`📡 Response status: ${response.status} ${response.statusText}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
         const lessonData = await response.json();
+        console.log(`📄 Lesson data received:`, lessonData);
         
         if (lessonData.status === 'error') {
-            throw new Error(lessonData.message);
+            throw new Error(lessonData.message || 'Unknown API error');
         }
         
         // Store lesson data globally
@@ -101,26 +109,130 @@ async function loadLesson(lessonId) {
         
     } catch (error) {
         console.error(`❌ Error loading lesson ${lessonId}:`, error);
+        console.log(`🔄 Attempting fallback to default content for lesson ${lessonId}`);
         
-        // Show error in problem statement area
-        updateProblemStatement(`# Error Loading Lesson ${lessonId}\n\nUnable to load lesson content: ${error.message}\n\nPlease refresh the page or contact support.`);
+        // If lesson endpoint doesn't exist, use fallback content for Lesson 1
+        if (lessonId === '01' && (error.message.includes('404') || error.message.includes('not found'))) {
+            console.log(`📦 Using fallback content for Lesson 1`);
+            
+            const fallbackLessonData = {
+                lesson_id: '01',
+                problem_statement: getFallbackProblemStatement(),
+                starter_code: getFallbackStarterCode(),
+                status: 'fallback'
+            };
+            
+            // Store fallback data
+            currentLessonData = fallbackLessonData;
+            
+            // Update UI with fallback content
+            updateProblemStatement(fallbackLessonData.problem_statement);
+            updateCodeEditor(fallbackLessonData.starter_code);
+            
+            console.log(`✅ Lesson ${lessonId} loaded with fallback content`);
+            return fallbackLessonData;
+        }
         
-        // Set fallback starter code
-        updateCodeEditor(`# Error: Could not load lesson ${lessonId}\nprint("Please refresh the page to try again")`);
+        // Show error in problem statement area for other cases
+        updateProblemStatement(`# Error Loading Lesson ${lessonId}\n\nUnable to load lesson content: ${error.message}\n\nThe lesson endpoint may not be deployed yet. Please try again later or contact support.`);
+        
+        // Set error starter code
+        updateCodeEditor(`# Error: Could not load lesson ${lessonId}\n# ${error.message}\nprint("Please refresh the page to try again")`);
         
         throw error;
     }
 }
 
 /**
+ * Get fallback problem statement for Lesson 1
+ */
+function getFallbackProblemStatement() {
+    return `# Lesson 1: The Deceptive Quit Button
+
+Welcome to **"Try Not to Quit"** - a game where the goal is supposedly to quit, but quitting becomes increasingly difficult and entertaining!
+
+## Your Mission
+
+Create a program that appears to let the user quit, but actually makes quitting impossible (or at least very amusing). This lesson teaches you the basics of:
+
+- \`print()\` statements for output
+- \`input()\` for user interaction  
+- Variables to store user choices
+- Basic conditional logic with \`if/else\`
+
+## The Challenge
+
+Your program should:
+
+1. **Welcome the user** to the "Try Not to Quit" game
+2. **Ask the user** if they want to quit
+3. **Respond cleverly** when they try to quit (make it fail in a funny way)
+4. **Continue the game** regardless of their choice
+
+## Expected Behavior
+
+When a user runs your code and types "quit", they should see something like:
+
+\`\`\`
+🎮 Welcome to TRY NOT TO QUIT!
+Your mission: Find a way to exit this program.
+Type 'quit' to quit: quit
+❌ ERROR: Quit function temporarily disabled for maintenance
+Please try again later... or don't. 😏
+🔄 Game continues whether you like it or not!
+\`\`\`
+
+## Learning Goals
+
+By the end of this lesson, you'll understand:
+- How to display messages to users with \`print()\`
+- How to get input from users with \`input()\`
+- How to store user responses in variables
+- How to make decisions in your code with \`if/else\` statements
+- The concept of program flow control
+
+Ready to create your first "unquittable" program? Let's code!
+
+---
+*Note: Using fallback content - lesson endpoint not yet deployed*`;
+}
+
+/**
+ * Get fallback starter code for Lesson 1
+ */
+function getFallbackStarterCode() {
+    return `# Welcome to "Try Not to Quit" - Lesson 1: The Deceptive Quit Button
+# Your mission: Create a quit button that doesn't actually work!
+
+print("🎮 Welcome to TRY NOT TO QUIT!")
+print("Your mission: Find a way to exit this program.")
+
+# TODO: Ask the user if they want to quit
+# Hint: Use input() to get their response
+
+# TODO: Check if they typed "quit"
+# Hint: Use an if statement to compare their input
+
+# TODO: Respond when they try to quit (make it funny!)
+# Hint: Print an error message that explains why quitting failed
+
+# TODO: Continue the game regardless
+# Hint: Print a message showing the game continues`;
+}
+
+/**
  * Update the problem statement panel with markdown-like content
  */
 function updateProblemStatement(markdown) {
+    console.log(`📄 Updating problem statement with ${markdown.length} characters`);
+    
     const problemContent = document.getElementById('problem-content');
     if (!problemContent) {
-        console.warn('Problem content element not found');
+        console.error('❌ Problem content element not found - check HTML structure');
         return;
     }
+    
+    console.log('🎯 Problem content element found, converting markdown...');
     
     // Simple markdown-to-HTML conversion
     let html = markdown
@@ -138,20 +250,25 @@ function updateProblemStatement(markdown) {
         .replace(/^(?!<[hul]|<\/[hul]|<pre|<\/pre)(.+)$/gm, '<p>$1</p>');
     
     problemContent.innerHTML = html;
+    console.log('✅ Problem statement updated successfully');
 }
 
 /**
  * Update the code editor with new content
  */
 function updateCodeEditor(code) {
+    console.log(`📝 Updating code editor with ${code.length} characters`);
+    console.log(`🔧 CodeEditor state: ${codeEditor ? 'initialized' : 'not initialized'}`);
+    
     if (codeEditor && codeEditor.setValue) {
         codeEditor.setValue(code);
         codeEditor.clearHistory(); // Clear undo history
-        console.log('📝 Code editor updated with lesson content');
+        console.log('✅ Code editor updated successfully with lesson content');
     } else {
-        console.warn('Code editor not initialized yet, will set content when ready');
+        console.warn('⚠️ Code editor not initialized yet, storing content for later');
         // Store code for when editor is ready
         window.pendingStarterCode = code;
+        console.log('💾 Pending starter code stored in window.pendingStarterCode');
     }
 }
 
