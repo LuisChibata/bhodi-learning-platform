@@ -1225,53 +1225,64 @@ input:focus {
 /* Input Collection Modal Styles */
 .input-modal-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    top: 20px;
+    right: 20px;
     z-index: 1000;
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    animation: modal-fade-in var(--transition-normal);
+    animation: modal-slide-in-from-right var(--transition-normal);
+    /* No backdrop blur or full-screen overlay - students can see output! */
 }
 
-@keyframes modal-fade-in {
+@keyframes modal-slide-in-from-right {
     from {
+        transform: translateX(100%);
         opacity: 0;
-        backdrop-filter: blur(0px);
-        -webkit-backdrop-filter: blur(0px);
     }
     to {
+        transform: translateX(0);
         opacity: 1;
-        backdrop-filter: blur(4px);
-        -webkit-backdrop-filter: blur(4px);
     }
 }
 
 .input-modal-content {
     background: var(--bg-primary);
     border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
-    max-width: 500px;
-    width: 90%;
-    max-height: 80vh;
+    box-shadow: var(--shadow-xl);
+    width: 320px;
+    max-height: 400px;
     overflow-y: auto;
-    animation: modal-slide-in var(--transition-normal);
-    border: 2px solid var(--primary-color);
+    border: 3px solid var(--primary-color);
+    /* Enhanced visibility without blocking output */
+    box-shadow: 
+        0 10px 25px rgba(0, 0, 0, 0.15),
+        0 0 0 1px rgba(52, 152, 219, 0.2),
+        0 0 20px rgba(52, 152, 219, 0.1);
 }
 
-@keyframes modal-slide-in {
-    from {
-        transform: translateY(-20px) scale(0.95);
-        opacity: 0;
+/* Responsive modal positioning */
+@media (max-width: 768px) {
+    .input-modal-overlay {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        /* Center on mobile for better accessibility */
     }
-    to {
-        transform: translateY(0) scale(1);
-        opacity: 1;
+    
+    .input-modal-content {
+        width: 100%;
+        max-width: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .input-modal-overlay {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        bottom: auto;
+    }
+    
+    .input-modal-content {
+        max-height: 300px;
     }
 }
 

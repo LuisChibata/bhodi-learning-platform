@@ -543,8 +543,8 @@ async function collectUserInputs(inputCalls) {
             <div id="input-modal" class="input-modal-overlay">
                 <div class="input-modal-content">
                     <div class="input-modal-header">
-                        <h3>📝 Your Program Needs Input</h3>
-                        <p>Your code uses input() functions. Please provide the values below:</p>
+                        <h3>🎮 Provide Input Values</h3>
+                        <p>You can still see your output below while entering inputs:</p>
                     </div>
                     <div class="input-modal-body">
                         ${inputCalls.map((input, index) => `
