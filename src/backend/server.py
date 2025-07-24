@@ -271,7 +271,7 @@ def _load_lesson_data(lesson_id):
 
 def _execute_code_safely(code):
     """Execute code safely and return result (reusable from execute_python_code)"""
-    return execute_python_code(code, timeout=5)  # Use existing execute_python_code function
+    return execute_python_code(code, timeout=5, data=None)  # Use existing execute_python_code function
 
 def _generate_lesson_feedback(lesson_id, student_code, student_output, expected_output, lesson_data):
     """Generate educational feedback for lesson answers"""
@@ -488,7 +488,7 @@ def _parse_python_error(error_output):
             "suggestion": "Read the error message carefully - it often tells you exactly what went wrong!"
         }
 
-def execute_python_code(code, timeout=None):
+def execute_python_code(code, timeout=None, data=None):
     """
     Execute Python code safely with timeout
     
@@ -536,16 +536,20 @@ def execute_python_code(code, timeout=None):
         
         start_time = time.time()
         
-        # Detect if code uses input() and provide simulated input
+        # Handle user-provided inputs or use defaults for input() calls
+        user_inputs = data.get('user_inputs', []) if isinstance(data, dict) else []
         
         if "input(" in code:
-            # For educational purposes, provide some default inputs
-            # This simulates user interaction in a web environment
-            
-            # Simple approach: provide a few default inputs
-            simulated_input_lines = ["quit", "test", "hello"]  # Default inputs
-            simulated_input = "\n".join(simulated_input_lines) + "\n"
-            logger.info(f"Providing simulated input: {simulated_input_lines}")
+            if user_inputs:
+                # Use user-provided inputs
+                simulated_input_lines = user_inputs
+                simulated_input = "\n".join(simulated_input_lines) + "\n"
+                logger.info(f"Using user-provided inputs: {simulated_input_lines}")
+            else:
+                # Fall back to default simulated inputs
+                simulated_input_lines = ["quit", "test", "hello"]  # Default inputs
+                simulated_input = "\n".join(simulated_input_lines) + "\n"
+                logger.info(f"Using default simulated inputs: {simulated_input_lines}")
         
         # Execute code with timeout
         try:
@@ -655,8 +659,8 @@ def run_code():
         code_preview = code[:100] + "..." if len(code) > 100 else code
         logger.info(f"Executing code: {code_preview}")
         
-        # Execute the code
-        result = execute_python_code(code)
+        # Execute the code with user inputs if provided
+        result = execute_python_code(code, data=data)
         
         # Log result
         logger.info(f"Code execution result: {result['status']}")

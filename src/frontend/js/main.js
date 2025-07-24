@@ -490,6 +490,150 @@ function initializeTabs() {
     }
 }
 
+// Input Detection and Collection System
+function detectInputCalls(code) {
+    /**
+     * Detect input() function calls in Python code and extract prompts
+     * Returns array of input prompts found in the code
+     */
+    const inputCalls = [];
+    const lines = code.split('\n');
+    
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        
+        // Skip comments and empty lines
+        if (line.startsWith('#') || line === '') continue;
+        
+        // Look for input() calls
+        const inputRegex = /input\s*\(\s*([^)]*)\s*\)/g;
+        let match;
+        
+        while ((match = inputRegex.exec(line)) !== null) {
+            let prompt = match[1];
+            
+            // Clean up the prompt string
+            if (prompt) {
+                // Remove quotes and clean up
+                prompt = prompt.replace(/^["']|["']$/g, '');
+                prompt = prompt.replace(/\\n/g, '\n').replace(/\\t/g, '\t');
+            } else {
+                prompt = `Input ${inputCalls.length + 1}:`;
+            }
+            
+            inputCalls.push({
+                prompt: prompt || `Input ${inputCalls.length + 1}:`,
+                lineNumber: i + 1,
+                value: '' // Will be filled by user
+            });
+        }
+    }
+    
+    return inputCalls;
+}
+
+async function collectUserInputs(inputCalls) {
+    /**
+     * Show modal to collect user inputs for input() calls
+     * Returns array of input values or null if cancelled
+     */
+    return new Promise((resolve) => {
+        // Create modal HTML
+        const modalHTML = `
+            <div id="input-modal" class="input-modal-overlay">
+                <div class="input-modal-content">
+                    <div class="input-modal-header">
+                        <h3>📝 Your Program Needs Input</h3>
+                        <p>Your code uses input() functions. Please provide the values below:</p>
+                    </div>
+                    <div class="input-modal-body">
+                        ${inputCalls.map((input, index) => `
+                            <div class="input-group">
+                                <label for="user-input-${index}">
+                                    <strong>Line ${input.lineNumber}:</strong> ${input.prompt}
+                                </label>
+                                <input 
+                                    type="text" 
+                                    id="user-input-${index}" 
+                                    class="user-input-field"
+                                    placeholder="Enter your input here..."
+                                    autocomplete="off"
+                                >
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="input-modal-footer">
+                        <button id="input-modal-cancel" class="action-btn secondary">Cancel</button>
+                        <button id="input-modal-submit" class="action-btn primary">Run with These Inputs</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Add modal to page
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        
+        const modal = document.getElementById('input-modal');
+        const cancelBtn = document.getElementById('input-modal-cancel');
+        const submitBtn = document.getElementById('input-modal-submit');
+        
+        // Focus first input
+        const firstInput = document.getElementById('user-input-0');
+        if (firstInput) {
+            setTimeout(() => firstInput.focus(), 100);
+        }
+        
+        // Handle form submission
+        const handleSubmit = () => {
+            const inputs = [];
+            for (let i = 0; i < inputCalls.length; i++) {
+                const inputField = document.getElementById(`user-input-${i}`);
+                inputs.push(inputField ? inputField.value : '');
+            }
+            
+            // Remove modal
+            modal.remove();
+            resolve(inputs);
+        };
+        
+        // Handle cancellation
+        const handleCancel = () => {
+            modal.remove();
+            resolve(null);
+        };
+        
+        // Event listeners
+        cancelBtn.addEventListener('click', handleCancel);
+        submitBtn.addEventListener('click', handleSubmit);
+        
+        // Allow Enter to submit from any input field
+        modal.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.target.classList.contains('user-input-field')) {
+                e.preventDefault();
+                
+                // Find next input or submit if last
+                const currentIndex = parseInt(e.target.id.split('-')[2]);
+                const nextInput = document.getElementById(`user-input-${currentIndex + 1}`);
+                
+                if (nextInput) {
+                    nextInput.focus();
+                } else {
+                    handleSubmit();
+                }
+            } else if (e.key === 'Escape') {
+                handleCancel();
+            }
+        });
+        
+        // Click outside to cancel
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                handleCancel();
+            }
+        });
+    });
+}
+
 /**
  * Initialize buttons and keyboard shortcuts
  */
@@ -719,6 +863,26 @@ async function handleRunCode() {
             await new Promise(resolve => setTimeout(resolve, 1000)); // Brief pause
         }
         
+        // Check if code contains input() calls
+        const inputCalls = detectInputCalls(code);
+        let userInputs = [];
+        
+        if (inputCalls.length > 0) {
+            // Show input collection modal
+            showOutput('⏳ Your code needs input values...\nPlease provide inputs in the modal.');
+            
+            userInputs = await collectUserInputs(inputCalls);
+            
+            if (userInputs === null) {
+                // User cancelled
+                showOutput('❌ Code execution cancelled by user.');
+                updateStatus('Execution cancelled', 'error');
+                return;
+            }
+            
+            console.log('User provided inputs:', userInputs);
+        }
+        
         console.log('Sending code to backend for execution:', code);
         
         // Show execution start
@@ -729,15 +893,22 @@ async function handleRunCode() {
         const startTime = Date.now();
         
         // Send code to backend for real execution
+        const requestBody = { 
+            code: code,
+            action: 'run'
+        };
+        
+        // Include user inputs if provided
+        if (userInputs.length > 0) {
+            requestBody.user_inputs = userInputs;
+        }
+        
         const response = await fetch(`${API_BASE_URL}/api/run-code`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ 
-                code: code,
-                action: 'run'
-            })
+            body: JSON.stringify(requestBody)
         });
         
         const endTime = Date.now();
