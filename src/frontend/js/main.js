@@ -756,8 +756,18 @@ async function handleRunCode() {
             const output = result.output || '(no output)';
             const executionTime = result.execution_time || 'unknown';
             
-            // Enhanced output with timing info
+            // Enhanced output with timing info and input simulation
             let formattedOutput = `${output}\n`;
+            
+            // Add input simulation information if present
+            if (result.simulated_input) {
+                formattedOutput += `\n${'─'.repeat(40)}\n`;
+                formattedOutput += `📝 Input Simulation: Your code used input() functions\n`;
+                formattedOutput += `🎮 Simulated inputs: ${result.simulated_input.map(inp => `"${inp}"`).join(', ')}\n`;
+                formattedOutput += `💡 In a real program, users would type these values\n`;
+                formattedOutput += `${'─'.repeat(40)}\n`;
+            }
+            
             formattedOutput += `\n${'='.repeat(50)}\n`;
             formattedOutput += `✅ Execution completed successfully!\n`;
             formattedOutput += `⏱️  Server time: ${executionTime}\n`;

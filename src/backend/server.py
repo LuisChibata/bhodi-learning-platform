@@ -524,6 +524,10 @@ def execute_python_code(code, timeout=None):
             "error_type": "input_error"
         }
     
+    # Initialize variables for input simulation (available in entire function scope)
+    simulated_input = ""
+    simulated_input_lines = []
+    
     try:
         # Create temporary file
         with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as temp_file:
@@ -532,10 +536,23 @@ def execute_python_code(code, timeout=None):
         
         start_time = time.time()
         
+        # Detect if code uses input() and provide simulated input
+        
+        if "input(" in code:
+            # For educational purposes, provide some default inputs
+            # This simulates user interaction in a web environment
+            
+            # Simple approach: provide a few default inputs
+            simulated_input_lines = ["quit", "test", "hello"]  # Default inputs
+            simulated_input = "\n".join(simulated_input_lines) + "\n"
+            logger.info(f"Providing simulated input: {simulated_input_lines}")
+        
         # Execute code with timeout
         try:
+            
             result = subprocess.run(
                 [sys.executable, temp_file_path],
+                input=simulated_input,  # Provide stdin input
                 capture_output=True,
                 text=True,
                 timeout=timeout,
@@ -559,13 +576,20 @@ def execute_python_code(code, timeout=None):
                 stdout = stdout[:app.config['MAX_OUTPUT_LENGTH']] + "\n... (output truncated)"
             
             if result.returncode == 0:
-                return {
+                response = {
                     "status": "success",
                     "message": "Code executed successfully",
                     "output": stdout,
                     "execution_time": f"{execution_time:.3f}s",
-                    "step": "Step 7: Enhanced Error Handling"
+                    "step": "Step 11: UI Layout Modernization"
                 }
+                
+                # Add input simulation info if applicable
+                if simulated_input_lines:
+                    response["simulated_input"] = simulated_input_lines
+                    response["input_note"] = f"📝 Simulated user input: {', '.join(repr(inp) for inp in simulated_input_lines)}"
+                
+                return response
             else:
                 # Parse different types of errors for better user experience
                 error_info = _parse_python_error(stderr)
