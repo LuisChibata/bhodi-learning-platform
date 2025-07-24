@@ -2,7 +2,7 @@
 
 **Current Status**: Production-ready learning platform with enhanced error handling
 **Last Updated**: January 2025
-**Development Progress**: Step 7 of 17 completed
+**Development Progress**: Step 7 of 12 completed
 
 ---
 
@@ -57,7 +57,7 @@ Hosting:  Frontend (Netlify) + Backend (Fly.io Sydney region)
 bhodi-learning-platform/
 ├── project_docs/                    # Documentation
 │   ├── LESSON_PLAN.md              # "Try Not to Quit" curriculum
-│   ├── IMPROVED_DEVELOPMENT_PLAN.md # 17-step development roadmap
+│   ├── IMPROVED_DEVELOPMENT_PLAN.md # 12-step focused development roadmap
 │   ├── PLATFORM_DESIGN.md          # UI/UX philosophy
 │   └── DEVELOPMENT_PLAN.md          # Original 4-phase plan
 ├── src/
@@ -65,8 +65,7 @@ bhodi-learning-platform/
 │   │   ├── index.html              # Main UI with 3-panel layout
 │   │   ├── css/style.css           # Styling and animations
 │   │   └── js/
-│   │       ├── main.js             # Core functionality + CodeMirror
-│   │       └── visualizer.js       # Future inheritance visualization
+│   │       └── main.js             # Core functionality + CodeMirror
 │   └── backend/                     # Server-side application
 │       ├── server.py               # Flask app with error parsing
 │       ├── config.py               # Environment configurations
@@ -235,14 +234,18 @@ result = subprocess.run(
 
 ### Current Theme: "Try Not to Quit"
 
-Each lesson builds game mechanics while teaching programming concepts:
+**Adaptive Lesson Design**: Each lesson builds game mechanics while teaching programming concepts, with future lessons designed based on student performance:
 
-1. **Lesson 1**: The Deceptive Quit Button (`print()`, variables, `input()`)
-2. **Lesson 2**: The Guilt-Trip Gatekeeper (`if/elif/else`, conditionals)
-3. **Lesson 3**: The Progress Trap (dictionaries, data structures)
-4. **Lesson 4**: The Infinite Retry Loop (`while` loops, `break`)
-5. **Lesson 5**: The Retention Agents (classes, objects, `__init__`)
-6. **Lesson 6**: The Retention Agency Hierarchy (inheritance, method overriding)
+1. **Lesson 1**: The Deceptive Quit Button (`print()`, variables, `input()`) - **Current Focus**
+2. **Future Lessons**: Will be designed based on how students perform in Lesson 1, ensuring optimal learning progression tailored to real student needs.
+
+**Planned Concepts** (subject to adaptation):
+- Conditional logic (`if/elif/else`)
+- Data structures (dictionaries, lists)
+- Loops (`while`, `for`)
+- Functions and methods
+- Classes and objects
+- Inheritance hierarchies
 
 ### Default Code Example
 
@@ -278,18 +281,15 @@ print("🔄 Game continues whether you like it or not!")
 - ✅ **Step 6**: Enhanced UX with animations and feedback
 - ✅ **Step 7**: Enhanced error handling with educational messages
 
-### Next Steps (8-17)
+### Next Steps (8-12) - Focused Platform Completion
 
-- **Step 8**: Static Lesson Loading (load from markdown files)
-- **Step 9**: Syntax Highlighting Themes
-- **Step 10**: Code Templates and Snippets
-- **Step 11**: Lesson Navigation (next/previous)
-- **Step 12**: Progress Tracking (localStorage)
-- **Step 13**: Improved Feedback System
-- **Step 14**: Basic Inheritance Detection (AST parsing)
-- **Step 15**: Inheritance Visualizer (Mermaid.js diagrams)
-- **Step 16**: Advanced Security (sandboxing)
-- **Step 17**: Final Polish and Testing
+- **Step 8**: Lesson Content System (dynamic lesson loading from files)
+- **Step 9**: Check Answer System (educational feedback, not just pass/fail)
+- **Step 10**: UI Polish & Design Compliance (follow PLATFORM_DESIGN.md exactly)
+- **Step 11**: Platform Security & Performance (robust timeouts, resource limits)
+- **Step 12**: Final Testing & Deployment (production-ready with one perfect lesson)
+
+**Final Goal**: Complete platform with one thoroughly tested lesson, ready for student use. Future lessons will be added based on student performance data.
 
 ---
 
@@ -340,9 +340,9 @@ flyctl deploy --no-cache
 ### Educational KPIs
 
 - **User Experience**: Friendly error messages instead of Python tracebacks
-- **Engagement**: Meta-game concept keeps students motivated
-- **Learning**: Each lesson builds practical programming skills
-- **Progressive**: From basic `print()` to complex inheritance concepts
+- **Engagement**: Meta-game concept keeps students motivated  
+- **Learning**: Complete lesson workflow from problem to solution
+- **Quality**: One thoroughly tested lesson ready for real students
 
 ---
 
