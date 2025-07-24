@@ -946,7 +946,16 @@ async function handleRunCode() {
             formattedOutput += `📝 Code lines: ${code.split('\n').length}\n`;
             formattedOutput += `${'='.repeat(50)}`;
             
-            showOutput(formattedOutput);
+            // Store for quick re-run if inputs were used
+            if (inputCalls.length > 0) {
+                window.lastExecutionData = {
+                    code: code,
+                    inputCalls: inputCalls,
+                    userInputs: userInputs
+                };
+            }
+            
+            showOutput(formattedOutput, inputCalls.length > 0);
             updateStatus('Execution successful', 'ready');
             
             // Flash success indicator
@@ -1281,12 +1290,198 @@ function updateStatus(text, state) {
 /**
  * Utility function to show messages in output
  */
-function showOutput(text) {
+function showOutput(text, showRerunButton = false) {
     const outputText = document.getElementById('output-text');
     if (outputText) {
+        // Clear any existing rerun containers
+        const existingRerun = outputText.parentNode.querySelector('.rerun-container');
+        if (existingRerun) {
+            existingRerun.remove();
+        }
+        
         outputText.textContent = text;
+        
+        // Add "Try Different Input" button if code used input() and execution was successful
+        if (showRerunButton && window.lastExecutionData) {
+            const rerunContainer = document.createElement('div');
+            rerunContainer.className = 'rerun-container';
+            rerunContainer.style.cssText = `
+                margin-top: 1rem;
+                padding: 1rem;
+                background: var(--accent-color, #f8f9fa);
+                border-radius: 8px;
+                border-left: 4px solid var(--primary-color, #3498db);
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                flex-wrap: wrap;
+            `;
+            
+            const rerunText = document.createElement('span');
+            rerunText.textContent = '🔄 Want to try different inputs?';
+            rerunText.style.cssText = `
+                color: var(--text-color, #2c3e50);
+                font-weight: 500;
+                flex: 1;
+                min-width: 200px;
+            `;
+            
+            const rerunButton = document.createElement('button');
+            rerunButton.textContent = '🎮 Try Different Input';
+            rerunButton.className = 'rerun-button';
+            rerunButton.style.cssText = `
+                background: var(--primary-color, #3498db);
+                color: white;
+                border: none;
+                padding: 0.5rem 1rem;
+                border-radius: 6px;
+                cursor: pointer;
+                font-weight: 500;
+                transition: all 0.2s ease;
+                font-size: 0.9rem;
+            `;
+            
+            // Add hover effect
+            rerunButton.addEventListener('mouseenter', () => {
+                rerunButton.style.background = 'var(--primary-hover, #2980b9)';
+                rerunButton.style.transform = 'translateY(-1px)';
+            });
+            rerunButton.addEventListener('mouseleave', () => {
+                rerunButton.style.background = 'var(--primary-color, #3498db)';
+                rerunButton.style.transform = 'translateY(0)';
+            });
+            
+            // Add click handler for quick re-run
+            rerunButton.addEventListener('click', async () => {
+                if (window.lastExecutionData) {
+                    const { code, inputCalls } = window.lastExecutionData;
+                    showOutput('⏳ Getting new input values...\nPlease provide inputs in the modal.');
+                    
+                    const newInputs = await collectUserInputs(inputCalls);
+                    if (newInputs !== null) {
+                        // Update stored data with new inputs
+                        window.lastExecutionData.userInputs = newInputs;
+                        
+                        // Re-run with new inputs directly
+                        await executeCodeWithInputs(code, newInputs);
+                    } else {
+                        showOutput('❌ Input collection cancelled. Output remains unchanged.');
+                    }
+                }
+            });
+            
+            rerunContainer.appendChild(rerunText);
+            rerunContainer.appendChild(rerunButton);
+            
+            // Insert the button container after the text
+            outputText.parentNode.appendChild(rerunContainer);
+        }
     }
     document.getElementById('output-tab')?.click(); // Switch to output tab
+}
+
+/**
+ * Execute code with predetermined inputs (for quick re-run)
+ */
+async function executeCodeWithInputs(code, userInputs) {
+    const runBtn = document.querySelector('.run-button, button[onclick="runPythonCode()"], #run-button');
+    
+    try {
+        // Update UI state
+        if (runBtn) {
+            runBtn.disabled = true;
+            runBtn.classList.add('loading');
+            runBtn.innerHTML = '⏳ Running...';
+        }
+        
+        updateStatus('Executing Python code...', 'running');
+        
+        showOutput('Code sent to backend...\nExecuting Python code...\n');
+        
+        const startTime = Date.now();
+        
+        // Send code to backend for execution
+        const requestBody = { 
+            code: code,
+            action: 'run',
+            user_inputs: userInputs
+        };
+        
+        const response = await fetch(`${API_BASE_URL}/api/run-code`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody)
+        });
+        
+        const endTime = Date.now();
+        const clientTime = ((endTime - startTime) / 1000).toFixed(3);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log('Quick re-run result:', result);
+        
+        // Handle the response
+        if (result.status === 'success') {
+            const output = result.output || '(no output)';
+            const executionTime = result.execution_time || 'unknown';
+            
+            let formattedOutput = `${output}\n`;
+            
+            if (result.simulated_input) {
+                formattedOutput += `\n${'─'.repeat(40)}\n`;
+                formattedOutput += `📝 Input Simulation: Your code used input() functions\n`;
+                formattedOutput += `🎮 Simulated inputs: ${result.simulated_input.map(inp => `"${inp}"`).join(', ')}\n`;
+                formattedOutput += `💡 In a real program, users would type these values\n`;
+                formattedOutput += `${'─'.repeat(40)}\n`;
+            }
+            
+            formattedOutput += `\n${'='.repeat(50)}\n`;
+            formattedOutput += `✅ Execution completed successfully! (Quick re-run)\n`;
+            formattedOutput += `⏱️  Server time: ${executionTime}\n`;
+            formattedOutput += `🌐 Total time: ${clientTime}s\n`;
+            formattedOutput += `📝 Code lines: ${code.split('\n').length}\n`;
+            formattedOutput += `${'='.repeat(50)}`;
+            
+            showOutput(formattedOutput, true); // Show re-run button again
+            updateStatus('Execution successful', 'ready');
+            
+            if (runBtn) {
+                runBtn.classList.add('success-flash');
+                setTimeout(() => runBtn.classList.remove('success-flash'), 2000);
+            }
+        } else {
+            handleExecutionError(result, clientTime);
+        }
+        
+        setTimeout(() => {
+            updateStatus('Ready', 'ready');
+        }, 4000);
+        
+    } catch (error) {
+        console.error('Error in quick re-run:', error);
+        updateStatus('Execution failed', 'error');
+        
+        let errorOutput = `❌ Failed to execute code (quick re-run)\n\n`;
+        errorOutput += `🔍 Error Details: ${error.message}\n\n`;
+        errorOutput += `🛠️  Try refreshing the page or running the code normally.\n`;
+        
+        showOutput(errorOutput);
+        
+        setTimeout(() => {
+            updateStatus('Ready', 'ready');
+        }, 5000);
+    } finally {
+        if (runBtn) {
+            runBtn.disabled = false;
+            runBtn.classList.remove('loading');
+            runBtn.innerHTML = '▶️ Run Code';
+        }
+    }
 }
 
 /**

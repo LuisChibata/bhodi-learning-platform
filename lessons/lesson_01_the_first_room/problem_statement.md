@@ -33,6 +33,20 @@ Please try again later... or don't. 😏
 🔄 Game continues whether you like it or not!
 ```
 
+## 🎮 Experiment Ideas
+
+Once your code works, try running it multiple times with different inputs to see what happens:
+
+**Try these inputs:**
+- `quit` (the obvious choice)
+- `exit` (another way to quit)
+- `hello` (something completely different)
+- `no` (refusing to quit)
+- `42` (a random number)
+- *(Leave it empty and just press Enter)*
+
+**💡 Learning Tip:** Use the "🎮 Try Different Input" button that appears after running your code to quickly test different inputs without rewriting everything!
+
 ## Learning Goals
 
 By the end of this lesson, you'll understand:
