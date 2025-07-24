@@ -9,6 +9,7 @@ import logging
 import tempfile
 import subprocess
 import time
+import re
 from threading import Timer
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -101,6 +102,125 @@ def test_connection():
             "error_type": "system_error"
         }), 500
 
+def _parse_python_error(error_output):
+    """
+    Parse Python error output to provide user-friendly error information
+    
+    Args:
+        error_output (str): Raw error output from Python
+    
+    Returns:
+        dict: Parsed error information with type, message, line, and suggestions
+    """
+    if not error_output:
+        return {
+            "type": "unknown_error",
+            "message": "Unknown error occurred",
+            "friendly_message": "Something went wrong, but we're not sure what.",
+            "suggestion": "Check your code for any obvious issues and try again."
+        }
+    
+    error_lower = error_output.lower()
+    lines = error_output.strip().split('\n')
+    
+    # Extract line number if present
+    line_number = None
+    for line in lines:
+        if "line" in line.lower() and any(char.isdigit() for char in line):
+            # Try to extract line number
+            import re
+            match = re.search(r'line (\d+)', line.lower())
+            if match:
+                line_number = int(match.group(1))
+                break
+    
+    # Determine error type and provide friendly messages
+    if "syntaxerror" in error_lower:
+        return {
+            "type": "syntax_error",
+            "message": "Syntax Error: There's a problem with your Python syntax",
+            "line": line_number,
+            "friendly_message": "🔧 Your code has a syntax error - Python can't understand what you wrote.",
+            "suggestion": "Check for missing colons (:), unmatched parentheses (), or incorrect indentation."
+        }
+    
+    elif "indentationerror" in error_lower:
+        return {
+            "type": "indentation_error", 
+            "message": "Indentation Error: Your code indentation is incorrect",
+            "line": line_number,
+            "friendly_message": "📏 Python is very picky about spacing! Your indentation isn't quite right.",
+            "suggestion": "Make sure you use 4 spaces for each level of indentation, and be consistent."
+        }
+    
+    elif "nameerror" in error_lower:
+        # Extract variable name if possible
+        var_match = re.search(r"name '(\w+)' is not defined", error_output)
+        var_name = var_match.group(1) if var_match else "variable"
+        
+        return {
+            "type": "name_error",
+            "message": f"Name Error: The {var_name} '{var_name}' is not defined",
+            "line": line_number,
+            "friendly_message": f"🔍 Python doesn't know what '{var_name}' is!",
+            "suggestion": f"Make sure you've defined '{var_name}' before using it, or check for typos."
+        }
+    
+    elif "typeerror" in error_lower:
+        return {
+            "type": "type_error",
+            "message": "Type Error: You're trying to use a value in the wrong way",
+            "line": line_number,
+            "friendly_message": "🔄 You're mixing up different types of data (like numbers and text).",
+            "suggestion": "Check that you're using the right type of data for what you're trying to do."
+        }
+    
+    elif "valueerror" in error_lower:
+        return {
+            "type": "value_error",
+            "message": "Value Error: The value you provided isn't valid for this operation",
+            "line": line_number,
+            "friendly_message": "⚠️ The value you're using isn't what Python expected.",
+            "suggestion": "Check the values you're passing to functions - they might be in the wrong format."
+        }
+    
+    elif "indexerror" in error_lower:
+        return {
+            "type": "index_error",
+            "message": "Index Error: You're trying to access an item that doesn't exist",
+            "line": line_number,
+            "friendly_message": "📋 You're trying to access an item in a list that doesn't exist!",
+            "suggestion": "Check that your list has enough items, or that your index number isn't too big."
+        }
+    
+    elif "keyerror" in error_lower:
+        return {
+            "type": "key_error",
+            "message": "Key Error: The dictionary key you're looking for doesn't exist",
+            "line": line_number,
+            "friendly_message": "🗝️ That key doesn't exist in your dictionary!",
+            "suggestion": "Check the spelling of your key, or use .get() method for safer access."
+        }
+    
+    elif "zerodivisionerror" in error_lower:
+        return {
+            "type": "zero_division_error",
+            "message": "Zero Division Error: You can't divide by zero",
+            "line": line_number,
+            "friendly_message": "🚫 Oops! You tried to divide by zero - that's mathematically impossible!",
+            "suggestion": "Check your math and make sure you're not dividing by zero."
+        }
+    
+    else:
+        # Generic runtime error
+        return {
+            "type": "runtime_error",
+            "message": "Runtime Error: Something went wrong while running your code",
+            "line": line_number,
+            "friendly_message": "⚡ Your code started running but hit a problem along the way.",
+            "suggestion": "Read the error message carefully - it often tells you exactly what went wrong!"
+        }
+
 def execute_python_code(code, timeout=None):
     """
     Execute Python code safely with timeout
@@ -177,17 +297,22 @@ def execute_python_code(code, timeout=None):
                     "message": "Code executed successfully",
                     "output": stdout,
                     "execution_time": f"{execution_time:.3f}s",
-                    "step": "Step 6: Run Code Feature"
+                    "step": "Step 7: Enhanced Error Handling"
                 }
             else:
-                # Runtime error
+                # Parse different types of errors for better user experience
+                error_info = _parse_python_error(stderr)
+                
                 return {
                     "status": "error",
-                    "message": "Runtime error during code execution",
+                    "message": error_info["message"],
                     "error_output": stderr,
                     "output": stdout if stdout else None,
                     "execution_time": f"{execution_time:.3f}s",
-                    "error_type": "runtime_error"
+                    "error_type": error_info["type"],
+                    "error_line": error_info.get("line"),
+                    "friendly_message": error_info["friendly_message"],
+                    "suggestion": error_info["suggestion"]
                 }
                 
         except subprocess.TimeoutExpired:

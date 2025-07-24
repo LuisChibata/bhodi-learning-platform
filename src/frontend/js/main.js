@@ -49,17 +49,26 @@ console.log(`🏠 Hostname: ${ENVIRONMENT.hostname}`);
 // Global code editor instance
 let codeEditor = null;
 
-// Default code for the editor
-const DEFAULT_CODE = `# Welcome to Bhodi Learning Platform!
-# Let's start with some basic Python
+// Default code for the editor - Lesson 1: The Deceptive Quit Button
+const DEFAULT_CODE = `# Welcome to "Try Not to Quit" - Lesson 1: The Deceptive Quit Button
+# Your mission: Create a quit button that doesn't actually work!
 
-print("Hello, Python learner!")
-print("Ready to explore programming concepts?")
+print("🎮 Welcome to TRY NOT TO QUIT!")
+print("Your mission: Find a way to exit this program.")
+print()
 
-# Try some basic operations
-name = "Bhodi Student"
-lesson = 1
-print(f"Student: {name}, Lesson: {lesson}")`;
+choice = input("Type 'quit' to quit: ")
+
+if choice == "quit":
+    print("❌ ERROR: Quit function temporarily disabled for maintenance")
+    print("Please try again later... or don't. 😏")
+else:
+    print("✅ Smart choice! Let's continue learning!")
+
+print()
+print("🔄 Game continues whether you like it or not!")
+print("💡 Lesson: Sometimes the most obvious solution doesn't work...")
+print("   Keep learning to discover why!"`;
 
 /**
  * Initialize the application when DOM is loaded
@@ -563,53 +572,70 @@ function handleExecutionError(result, clientTime) {
     const errorType = result.error_type || 'unknown';
     const executionTime = result.execution_time || 'unknown';
     let errorMessage = '';
-    
-    switch (errorType) {
-        case 'timeout_error':
-            errorMessage = `⏱️ Timeout Error\n\n`;
-            errorMessage += `Your code took too long to execute (over ${result.timeout}s).\n\n`;
-            errorMessage += `💡 Tips:\n`;
-            errorMessage += `• Check for infinite loops (while True, for loops without end)\n`;
-            errorMessage += `• Reduce the complexity of your code\n`;
-            errorMessage += `• Avoid long-running operations\n`;
-            errorMessage += `• Use smaller data sets for testing\n\n`;
-            errorMessage += `⏱️ Total time: ${clientTime}s`;
-            break;
-            
-        case 'runtime_error':
-            const stderr = result.error_output || 'Unknown runtime error';
-            errorMessage = `🐛 Runtime Error\n\n`;
-            errorMessage += `${stderr}\n\n`;
-            errorMessage += `⏱️ Execution time: ${executionTime}\n`;
-            errorMessage += `🌐 Total time: ${clientTime}s\n`;
-            if (result.output) {
-                errorMessage += `\n📤 Output before error:\n${result.output}\n`;
-            }
-            errorMessage += `\n💡 Tip: Check the error message above for specific line numbers and fix suggestions.`;
-            break;
-            
-        case 'input_error':
-            errorMessage = `📝 Input Error\n\n`;
-            errorMessage += `${result.message}\n\n`;
-            errorMessage += `Please enter some Python code to execute.\n\n`;
-            errorMessage += `💡 Example:\nprint("Hello, World!")\nx = 5\nprint(f"x = {x}")`;
-            break;
-            
-        case 'system_error':
-            errorMessage = `⚙️ System Error\n\n`;
-            errorMessage += `${result.message}\n\n`;
-            errorMessage += `This appears to be a server configuration issue.\n`;
-            errorMessage += `Please try again or contact support if the problem persists.`;
-            break;
-            
-        default:
-            errorMessage = `❌ Execution Error\n\n`;
-            errorMessage += `${result.message}\n\n`;
-            errorMessage += `⏱️ Execution time: ${executionTime}\n`;
-            errorMessage += `🌐 Total time: ${clientTime}s\n`;
-            if (result.error_details) {
-                errorMessage += `\n🔍 Details: ${result.error_details}`;
-            }
+
+    // Step 7: Enhanced Error Handling with user-friendly messages
+    if (result.friendly_message && result.suggestion) {
+        // Use the enhanced error information from backend
+        errorMessage = `${result.friendly_message}\n\n`;
+        
+        // Add line number if available
+        if (result.error_line) {
+            errorMessage += `📍 Error on line ${result.error_line}\n\n`;
+        }
+        
+        errorMessage += `🛠️ How to fix it:\n${result.suggestion}\n\n`;
+        
+        // Add the technical details in a collapsible format
+        errorMessage += `🔧 Technical Details:\n${result.message}\n\n`;
+        
+        // Show any output that was produced before the error
+        if (result.output) {
+            errorMessage += `✅ Output before error:\n${result.output}\n\n`;
+        }
+        
+        errorMessage += `⏱️ Execution time: ${executionTime} | Total time: ${clientTime}s`;
+        
+    } else {
+        // Fallback to the old error handling for cases without enhanced parsing
+        switch (errorType) {
+            case 'timeout_error':
+                errorMessage = `⏱️ Timeout Error\n\n`;
+                errorMessage += `Your code took too long to execute (over ${result.timeout}s).\n\n`;
+                errorMessage += `💡 Tips:\n`;
+                errorMessage += `• Check for infinite loops (while True, for loops without end)\n`;
+                errorMessage += `• Reduce the complexity of your code\n`;
+                errorMessage += `• Avoid long-running operations\n`;
+                errorMessage += `• Use smaller data sets for testing\n\n`;
+                errorMessage += `⏱️ Total time: ${clientTime}s`;
+                break;
+                
+            case 'input_error':
+                errorMessage = `📝 Input Error\n\n`;
+                errorMessage += `${result.message}\n\n`;
+                errorMessage += `Please enter some Python code to execute.\n\n`;
+                errorMessage += `💡 Example:\nprint("Hello, World!")\nx = 5\nprint(f"x = {x}")`;
+                break;
+                
+            case 'system_error':
+                errorMessage = `⚙️ System Error\n\n`;
+                errorMessage += `${result.message}\n\n`;
+                errorMessage += `This appears to be a server configuration issue.\n`;
+                errorMessage += `Please try again or contact support if the problem persists.`;
+                break;
+                
+            default:
+                // Generic error handling for unknown error types
+                const stderr = result.error_output || result.message || 'Unknown error';
+                errorMessage = `❌ Error Occurred\n\n`;
+                errorMessage += `${stderr}\n\n`;
+                errorMessage += `⏱️ Execution time: ${executionTime}\n`;
+                errorMessage += `🌐 Total time: ${clientTime}s\n`;
+                if (result.output) {
+                    errorMessage += `\n📤 Output before error:\n${result.output}\n`;
+                }
+                errorMessage += `\n💡 Tip: Check the error message above for specific line numbers and fix suggestions.`;
+                break;
+        }
     }
     
     showOutput(errorMessage);
