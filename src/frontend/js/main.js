@@ -143,7 +143,6 @@ function setupCodeMirror() {
             indentUnit: 4,
             indentWithTabs: false,
             lineWrapping: true,
-            theme: 'default',
             viewportMargin: Infinity,
             extraKeys: {
                 "Tab": function(cm) {
