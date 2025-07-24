@@ -1,0 +1,39 @@
+# fly.toml app configuration file generated for bhodi-learning-backend on 2025-07-24T13:49:00+10:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'bhodi-learning-backend'
+primary_region = 'syd'
+
+[build]
+
+[env]
+  FLASK_ENV = 'production'
+  PORT = '8000'
+  PYTHONPATH = '/app'
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ['app']
+
+  [[http_service.checks]]
+    interval = '10s'
+    timeout = '2s'
+    grace_period = '5s'
+    method = 'get'
+    path = '/health'
+    protocol = 'http'
+
+[[vm]]
+  memory = '512mb'
+  cpu_kind = 'shared'
+  cpus = 1
+
+[[metrics]]
+  port = 9091
+  path = '/metrics'

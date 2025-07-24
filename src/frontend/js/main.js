@@ -1,49 +1,65 @@
-// Main JavaScript for Bhodi Learning Platform
-// Step 5: Frontend Code Editor - CodeMirror integration
+/**
+ * Bhodi Learning Platform - Frontend JavaScript
+ * Step 6: Run Code Feature with production deployment support
+ */
 
-// Configuration
-const API_BASE_URL = 'http://localhost:5000';
+// Environment detection and API configuration
+const ENVIRONMENT = {
+    isDevelopment: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1',
+    isProduction: !window.location.hostname.includes('localhost'),
+    hostname: window.location.hostname
+};
 
-// CodeMirror editor instance
+/**
+ * Get the appropriate API base URL based on environment
+ */
+function getApiBaseUrl() {
+    if (ENVIRONMENT.isDevelopment) {
+        return 'http://localhost:5000';
+    }
+    
+    // Production API URL - deployed on Fly.io
+    const productionApiUrl = 'https://bhodi-learning-backend.fly.dev';
+    
+    return productionApiUrl;
+}
+
+// Set API base URL
+const API_BASE_URL = getApiBaseUrl();
+
+// Log environment information
+console.log(`🌍 Environment: ${ENVIRONMENT.isDevelopment ? 'Development' : 'Production'}`);
+console.log(`🔗 API URL: ${API_BASE_URL}`);
+console.log(`🏠 Hostname: ${ENVIRONMENT.hostname}`);
+
+// Global code editor instance
 let codeEditor = null;
 
-// Default code for the enhanced editor
-const DEFAULT_CODE = `# Step 5: Enhanced Code Editor Test
-# Try the new CodeMirror editor with syntax highlighting!
+// Default code for the editor
+const DEFAULT_CODE = `# Welcome to Bhodi Learning Platform!
+# Let's start with some basic Python
 
-print("Hello, Bhodi!")
-print("Welcome to the enhanced Python learning platform!")
+print("Hello, Python learner!")
+print("Ready to explore programming concepts?")
 
-# Try some basic Python operations
-name = "Bhodi"
-age = 25
-print(f"Student: {name}, Age: {age}")
+# Try some basic operations
+name = "Bhodi Student"
+lesson = 1
+print(f"Student: {name}, Lesson: {lesson}")`;
 
-# Test a simple calculation
-result = 5 + 3 * 2
-print(f"5 + 3 * 2 = {result}")
-
-# Test a loop with syntax highlighting
-print("Counting to 5:")
-for i in range(1, 6):
-    print(f"  {i}")
-
-print("Enhanced editor test complete!")`;
-
+/**
+ * Initialize the application when DOM is loaded
+ */
 document.addEventListener('DOMContentLoaded', function() {
-    // Tab switching functionality
+    console.log('🚀 Initializing Bhodi Learning Platform...');
+    console.log(`📍 Running in ${ENVIRONMENT.isDevelopment ? 'development' : 'production'} mode`);
+    
     initializeTabs();
-    
-    // Button event handlers with real backend communication
     initializeButtons();
-    
-    // Initialize CodeMirror when modules are loaded
     initializeCodeEditor();
-    
-    // Test initial connection to backend
     testBackendConnection();
     
-    console.log('Bhodi Learning Platform initialized - Step 5: Frontend Code Editor');
+    console.log('✅ Platform initialization complete!');
 });
 
 /**

@@ -1,37 +1,45 @@
 #!/usr/bin/env python3
 """
-Bhodi Learning Platform - Backend Server
-Step 5: Frontend Code Editor - Enhanced CodeMirror integration with real Python execution
+Bhodi Learning Platform Backend Server
+Secure Python code execution with Flask
 """
-
-from flask import Flask, jsonify, request
-from flask_cors import CORS
-import logging
-import subprocess
-import tempfile
 import os
-import signal
+import sys
+import logging
+import tempfile
+import subprocess
 import time
 from threading import Timer
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+from config import get_config
 
 # Initialize Flask app
 app = Flask(__name__)
 
-# Enable CORS for frontend-backend communication
-CORS(app)
+# Load configuration
+config = get_config()
+app.config.from_object(config)
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=getattr(logging, app.config['LOG_LEVEL']),
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
-# Code execution configuration
-CODE_EXECUTION_TIMEOUT = 5  # seconds
-MAX_OUTPUT_LENGTH = 10000    # characters
+# Initialize CORS with configuration
+CORS(app, origins=app.config['CORS_ORIGINS'])
+
+logger.info(f"Starting Bhodi Learning Platform Backend")
+logger.info(f"Environment: {os.environ.get('FLASK_ENV', 'development')}")
+logger.info(f"CORS Origins: {app.config['CORS_ORIGINS']}")
+logger.info(f"Code execution enabled: {app.config['ENABLE_CODE_EXECUTION']}")
 
 @app.route('/', methods=['GET'])
-def hello_world():
+def hello():
     """
-    Basic health check endpoint
+    Hello World endpoint to verify server is running
     Returns simple JSON response to verify server connectivity
     """
     logger.info("Hello World endpoint accessed")
@@ -39,119 +47,121 @@ def hello_world():
         "status": "success",
         "message": "Bhodi Learning Platform Backend is running!",
         "step": "Step 6: Run Code Feature",
-        "version": "1.0.0"
+        "version": "1.0.0",
+        "environment": os.environ.get('FLASK_ENV', 'development')
     })
 
 @app.route('/health', methods=['GET'])
 def health_check():
     """
-    Health check endpoint for monitoring
+    Health check endpoint for monitoring and container orchestration
     """
     return jsonify({
         "status": "healthy",
         "service": "bhodi-learning-platform",
-        "step": 6
+        "step": 6,
+        "environment": os.environ.get('FLASK_ENV', 'development'),
+        "code_execution": app.config['ENABLE_CODE_EXECUTION']
     })
 
 @app.route('/api/test-connection', methods=['POST'])
 def test_connection():
     """
     Test endpoint for frontend-backend communication
-    Step 3: Establishes basic communication channel
+    Used by Check Answer button in Step 6
     """
-    logger.info("Frontend connection test accessed")
-    
-    # Get any data sent from frontend
-    data = request.get_json() if request.is_json else {}
-    
-    return jsonify({
-        "status": "success",
-        "message": "Frontend-Backend connection successful!",
-        "step": "Step 5: Frontend Code Editor",
-        "received_data": data,
-        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-    })
-
-@app.route('/api/run-code', methods=['POST'])
-def run_code():
-    """
-    Execute Python code safely using subprocess
-    Step 4: Real code execution with safety measures
-    """
-    logger.info("Code execution endpoint accessed")
-    
     try:
-        # Get code from frontend
+        logger.info("Test connection endpoint called")
+        
         data = request.get_json() or {}
-        code = data.get('code', '').strip()
+        test_message = data.get('message', 'No message provided')
         
-        if not code:
-            return jsonify({
-                "status": "error",
-                "message": "No code provided",
-                "output": "",
-                "error_type": "input_error"
-            }), 400
-            
-        logger.info(f"Executing code: {code[:100]}..." if len(code) > 100 else f"Executing code: {code}")
-        
-        # Execute code safely
-        result = execute_python_code(code)
-        
-        logger.info(f"Code execution completed. Status: {result['status']}")
-        return jsonify(result)
+        return jsonify({
+            "status": "success",
+            "message": "Backend connection successful!",
+            "received_message": test_message,
+            "step": "Step 6: Run Code Feature",
+            "timestamp": time.time()
+        })
         
     except Exception as e:
-        logger.error(f"Unexpected error in run_code: {e}")
+        logger.error(f"Test connection error: {e}")
         return jsonify({
             "status": "error",
-            "message": "Internal server error during code execution",
-            "output": "",
-            "error_type": "server_error",
-            "error_details": str(e)
+            "message": f"Connection test failed: {str(e)}",
+            "error_type": "system_error"
         }), 500
 
-def execute_python_code(code):
+def execute_python_code(code, timeout=None):
     """
-    Execute Python code safely using subprocess with timeout and error handling
+    Execute Python code safely with timeout
     
     Args:
         code (str): Python code to execute
-        
+        timeout (int): Timeout in seconds (default from config)
+    
     Returns:
-        dict: Execution result with status, output, and error information
+        dict: Execution result with status, output, and timing
     """
-    start_time = time.time()
+    if not app.config['ENABLE_CODE_EXECUTION']:
+        return {
+            "status": "error",
+            "message": "Code execution is disabled",
+            "error_type": "system_error"
+        }
+    
+    if timeout is None:
+        timeout = app.config['EXECUTION_TIMEOUT']
+    
+    # Validate input
+    if not code or not code.strip():
+        return {
+            "status": "error",
+            "message": "No code provided",
+            "error_type": "input_error"
+        }
+    
+    if len(code) > app.config['MAX_CODE_LENGTH']:
+        return {
+            "status": "error",
+            "message": f"Code too long. Maximum {app.config['MAX_CODE_LENGTH']} characters allowed.",
+            "error_type": "input_error"
+        }
     
     try:
-        # Create a temporary file for the code
+        # Create temporary file
         with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as temp_file:
             temp_file.write(code)
             temp_file_path = temp_file.name
         
+        start_time = time.time()
+        
+        # Execute code with timeout
         try:
-            # Execute the code using subprocess with timeout
             result = subprocess.run(
-                ['python', temp_file_path],
+                [sys.executable, temp_file_path],
                 capture_output=True,
                 text=True,
-                timeout=CODE_EXECUTION_TIMEOUT,
-                cwd=tempfile.gettempdir()  # Run in temp directory for safety
+                timeout=timeout,
+                cwd=tempfile.gettempdir()  # Run in temp directory for security
             )
             
             execution_time = time.time() - start_time
             
-            # Check if output is too long
+            # Clean up temp file
+            try:
+                os.unlink(temp_file_path)
+            except OSError:
+                pass
+            
+            # Process results
             stdout = result.stdout
             stderr = result.stderr
             
-            if len(stdout) > MAX_OUTPUT_LENGTH:
-                stdout = stdout[:MAX_OUTPUT_LENGTH] + "\n... (output truncated)"
-                
-            if len(stderr) > MAX_OUTPUT_LENGTH:
-                stderr = stderr[:MAX_OUTPUT_LENGTH] + "\n... (error output truncated)"
+            # Limit output length
+            if len(stdout) > app.config['MAX_OUTPUT_LENGTH']:
+                stdout = stdout[:app.config['MAX_OUTPUT_LENGTH']] + "\n... (output truncated)"
             
-            # Successful execution
             if result.returncode == 0:
                 return {
                     "status": "success",
@@ -164,97 +174,114 @@ def execute_python_code(code):
                 # Runtime error
                 return {
                     "status": "error",
-                    "message": "Runtime error occurred",
-                    "output": stdout,  # Include any stdout that was produced
+                    "message": "Runtime error during code execution",
                     "error_output": stderr,
-                    "error_type": "runtime_error",
+                    "output": stdout if stdout else None,
                     "execution_time": f"{execution_time:.3f}s",
-                    "return_code": result.returncode
+                    "error_type": "runtime_error"
                 }
                 
-        finally:
-            # Clean up temporary file
+        except subprocess.TimeoutExpired:
+            # Clean up temp file
             try:
                 os.unlink(temp_file_path)
             except OSError:
-                pass  # File already deleted or permission issue
-                
-    except subprocess.TimeoutExpired:
-        # Code execution timed out
-        execution_time = time.time() - start_time
-        return {
-            "status": "error",
-            "message": f"Code execution timed out after {CODE_EXECUTION_TIMEOUT} seconds",
-            "output": "",
-            "error_type": "timeout_error",
-            "execution_time": f"{execution_time:.3f}s",
-            "timeout": CODE_EXECUTION_TIMEOUT
-        }
-        
-    except FileNotFoundError:
-        # Python interpreter not found
-        return {
-            "status": "error",
-            "message": "Python interpreter not found on the server",
-            "output": "",
-            "error_type": "system_error"
-        }
-        
+                pass
+            
+            execution_time = time.time() - start_time
+            return {
+                "status": "error",
+                "message": f"Code execution timed out after {timeout} seconds",
+                "timeout": timeout,
+                "execution_time": f"{execution_time:.3f}s",
+                "error_type": "timeout_error"
+            }
+            
     except Exception as e:
-        # Unexpected error during execution
-        execution_time = time.time() - start_time
+        logger.error(f"System error during code execution: {e}")
         return {
             "status": "error",
-            "message": f"Unexpected error during code execution: {str(e)}",
-            "output": "",
-            "error_type": "execution_error",
-            "execution_time": f"{execution_time:.3f}s"
+            "message": f"System error: {str(e)}",
+            "error_type": "system_error",
+            "error_details": str(e)
         }
 
-# Legacy endpoint for backward compatibility (Step 3)
-@app.route('/api/simulate-run', methods=['POST'])
-def simulate_run():
+@app.route('/api/run-code', methods=['POST'])
+def run_code():
     """
-    Legacy simulation endpoint - now redirects to real execution
-    Maintained for backward compatibility during transition
+    Execute Python code endpoint
+    Accepts JSON with 'code' field and returns execution results
     """
-    logger.info("Legacy simulate-run endpoint accessed - redirecting to real execution")
-    return run_code()
+    try:
+        logger.info("Code execution endpoint called")
+        
+        # Get JSON data
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                "status": "error",
+                "message": "No JSON data provided",
+                "error_type": "input_error"
+            }), 400
+        
+        code = data.get('code', '')
+        
+        # Log code execution attempt (truncated for security)
+        code_preview = code[:100] + "..." if len(code) > 100 else code
+        logger.info(f"Executing code: {code_preview}")
+        
+        # Execute the code
+        result = execute_python_code(code)
+        
+        # Log result
+        logger.info(f"Code execution result: {result['status']}")
+        
+        # Return appropriate HTTP status
+        if result['status'] == 'success':
+            return jsonify(result)
+        else:
+            return jsonify(result), 400
+            
+    except Exception as e:
+        logger.error(f"Unexpected error in run_code endpoint: {e}")
+        return jsonify({
+            "status": "error",
+            "message": "Internal server error",
+            "error_type": "system_error"
+        }), 500
 
 @app.errorhandler(404)
 def not_found(error):
-    """
-    Handle 404 errors
-    """
+    """Handle 404 errors"""
     return jsonify({
         "status": "error",
         "message": "Endpoint not found",
-        "error": "404 Not Found"
+        "error_type": "not_found"
     }), 404
+
+@app.errorhandler(405)
+def method_not_allowed(error):
+    """Handle 405 errors"""
+    return jsonify({
+        "status": "error",
+        "message": "Method not allowed",
+        "error_type": "method_not_allowed"
+    }), 405
 
 @app.errorhandler(500)
 def internal_error(error):
-    """
-    Handle 500 errors
-    """
+    """Handle 500 errors"""
     logger.error(f"Internal server error: {error}")
     return jsonify({
         "status": "error",
         "message": "Internal server error",
-        "error": "500 Internal Server Error"
+        "error_type": "system_error"
     }), 500
 
 if __name__ == '__main__':
-    logger.info("Starting Bhodi Learning Platform Backend Server...")
-    logger.info("Step 5: Frontend Code Editor - Enhanced CodeMirror integration")
-    logger.info("Server will run on http://localhost:5000")
-    logger.info(f"Code execution timeout: {CODE_EXECUTION_TIMEOUT}s")
-    logger.info(f"Max output length: {MAX_OUTPUT_LENGTH} characters")
+    # Development server
+    port = int(os.environ.get('PORT', 5000))
+    debug = os.environ.get('FLASK_ENV') == 'development'
     
-    # Run the Flask development server
-    app.run(
-        host='0.0.0.0',
-        port=5000,
-        debug=True,
-        use_reloader=True
-    ) 
+    logger.info(f"Starting development server on port {port}")
+    app.run(host='0.0.0.0', port=port, debug=debug) 
