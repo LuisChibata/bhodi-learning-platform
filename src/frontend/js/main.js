@@ -1,50 +1,18 @@
 /**
- * Bhodi Learning Platform - Frontend JavaScript
- * Step 6: Run Code Feature with production deployment support
+ * Bhodi Learning Platform - Frontend JavaScript (Modularized)
+ * Main application controller using modular architecture
  */
 
-// Environment detection and API configuration
-const ENVIRONMENT = {
-    hostname: window.location.hostname,
-    protocol: window.location.protocol,
-    isDevelopment: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1',
-    isProduction: window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
-};
+// Use modular API and Progress systems
+const API_BASE_URL = window.BhodiAPI.API_BASE_URL;
+const ENVIRONMENT = window.BhodiAPI.ENVIRONMENT;
 
-/**
- * Get the appropriate API base URL based on environment
- */
-function getApiBaseUrl() {
-    // Debug logging
-    console.log('🔍 Environment Detection Debug:');
-    console.log('  Hostname:', ENVIRONMENT.hostname);
-    console.log('  Protocol:', ENVIRONMENT.protocol);
-    console.log('  Is Development:', ENVIRONMENT.isDevelopment);
-    console.log('  Is Production:', ENVIRONMENT.isProduction);
-    
-    // Force production API for Netlify domains
-    if (ENVIRONMENT.hostname.includes('netlify.app') || 
-        ENVIRONMENT.hostname.includes('luischibata.com') ||
-        ENVIRONMENT.isProduction) {
-        
-        const productionApiUrl = 'https://bhodi-learning-backend.fly.dev';
-        console.log('🚀 Using Production API:', productionApiUrl);
-        return productionApiUrl;
-    }
-    
-    // Development mode
-    const developmentApiUrl = 'http://localhost:5000';
-    console.log('🔧 Using Development API:', developmentApiUrl);
-    return developmentApiUrl;
-}
-
-// Set API base URL
-const API_BASE_URL = getApiBaseUrl();
-
-// Log environment information
-console.log(`🌍 Environment: ${ENVIRONMENT.isDevelopment ? 'Development' : 'Production'}`);
-console.log(`🔗 API URL: ${API_BASE_URL}`);
-console.log(`🏠 Hostname: ${ENVIRONMENT.hostname}`);
+// Progress shortcuts  
+const userProgress = window.BhodiProgress.userProgress;
+const loadProgress = window.BhodiProgress.loadProgress;
+const saveProgress = window.BhodiProgress.saveProgress;
+const updateLessonProgress = window.BhodiProgress.updateLessonProgress;
+const updateProgressBar = window.BhodiProgress.updateProgressBar;
 
 // Global code editor instance
 let codeEditor = null;

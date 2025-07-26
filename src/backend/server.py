@@ -11,6 +11,7 @@ import subprocess
 import time
 import re
 from threading import Timer
+from collections import defaultdict, deque
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from config import get_config
@@ -46,6 +47,65 @@ logger.info(f"Environment: {os.environ.get('FLASK_ENV', 'development')}")
 logger.info(f"CORS Origins: {app.config['CORS_ORIGINS']}")
 logger.info(f"Code execution enabled: {app.config['ENABLE_CODE_EXECUTION']}")
 
+# Rate limiting storage
+# Format: {client_ip: deque([(timestamp, endpoint), ...])}
+rate_limit_storage = defaultdict(lambda: deque())
+
+def _clean_old_requests(client_ip, window_seconds=60):
+    """Remove requests older than window_seconds"""
+    current_time = time.time()
+    cutoff_time = current_time - window_seconds
+    
+    while (rate_limit_storage[client_ip] and 
+           rate_limit_storage[client_ip][0][0] < cutoff_time):
+        rate_limit_storage[client_ip].popleft()
+
+def _check_rate_limit(client_ip, endpoint, max_requests=10, window_seconds=60):
+    """
+    Check if client has exceeded rate limit
+    
+    Args:
+        client_ip (str): Client IP address
+        endpoint (str): API endpoint being accessed  
+        max_requests (int): Maximum requests allowed in window
+        window_seconds (int): Time window in seconds
+        
+    Returns:
+        dict: Rate limit check result
+    """
+    current_time = time.time()
+    
+    # Clean old requests
+    _clean_old_requests(client_ip, window_seconds)
+    
+    # Count requests for this endpoint in current window
+    endpoint_requests = sum(1 for _, ep in rate_limit_storage[client_ip] if ep == endpoint)
+    
+    if endpoint_requests >= max_requests:
+        return {
+            "allowed": False,
+            "message": f"Rate limit exceeded. Maximum {max_requests} requests per {window_seconds} seconds.",
+            "retry_after": window_seconds
+        }
+    
+    # Add current request
+    rate_limit_storage[client_ip].append((current_time, endpoint))
+    
+    return {
+        "allowed": True,
+        "requests_remaining": max_requests - endpoint_requests - 1
+    }
+
+def _get_client_ip():
+    """Get client IP address, handling proxies"""
+    # Check for forwarded IP (from reverse proxy)
+    if 'X-Forwarded-For' in request.headers:
+        return request.headers['X-Forwarded-For'].split(',')[0].strip()
+    elif 'X-Real-IP' in request.headers:
+        return request.headers['X-Real-IP']
+    else:
+        return request.remote_addr or '127.0.0.1'
+
 @app.route('/', methods=['GET'])
 def hello():
     """
@@ -74,38 +134,46 @@ def health_check():
         "code_execution": app.config['ENABLE_CODE_EXECUTION']
     })
 
+def find_lesson_directory(lesson_id):
+    """Find the lesson directory for a given lesson ID"""
+    # Determine base lessons path
+    if os.path.exists('lessons'):
+        # Production: lessons directory is in current working directory
+        lessons_base = 'lessons'
+    else:
+        # Development: go up two levels from src/backend to project root
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        lessons_base = os.path.join(project_root, 'lessons')
+    
+    # Look for lesson directory that starts with lesson_XX_
+    lesson_prefix = f'lesson_{lesson_id.zfill(2)}_'
+    
+    if os.path.exists(lessons_base):
+        for item in os.listdir(lessons_base):
+            if item.startswith(lesson_prefix) and os.path.isdir(os.path.join(lessons_base, item)):
+                return os.path.join(lessons_base, item)
+    
+    return None
+
 @app.route('/lesson/<lesson_id>', methods=['GET'])
 def get_lesson(lesson_id):
     """Get lesson content including problem statement, starter code, and solution"""
     try:
-        # Construct lesson directory path
-        # In development: go up two levels from src/backend to project root
-        # In production: lessons are copied to ./lessons/ in the container
-        if os.path.exists('lessons'):
-            # Production: lessons directory is in current working directory
-            lesson_dir = os.path.join('lessons', f'lesson_{lesson_id.zfill(2)}_the_first_room')
-            logger.info(f"Using production lesson path: {lesson_dir}")
-        else:
-            # Development: go up two levels from src/backend to project root
-            project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-            lesson_dir = os.path.join(project_root, 'lessons', f'lesson_{lesson_id.zfill(2)}_the_first_room')
-            logger.info(f"Using development lesson path: {lesson_dir}")
+        lesson_dir = find_lesson_directory(lesson_id)
         
-        logger.info(f"Looking for lesson directory: {lesson_dir}")
-        logger.info(f"Current working directory: {os.getcwd()}")
-        logger.info(f"Directory contents: {os.listdir('.')}")
-        
-        if not os.path.exists(lesson_dir):
-            logger.error(f"Lesson directory not found: {lesson_dir}")
+        if not lesson_dir:
+            logger.error(f"Lesson {lesson_id} directory not found")
             return jsonify({
                 "status": "error",
                 "message": f"Lesson {lesson_id} not found",
                 "debug_info": {
-                    "searched_path": lesson_dir,
-                    "cwd": os.getcwd(),
-                    "directory_contents": os.listdir('.') if os.path.exists('.') else "No current directory"
+                    "lesson_id": lesson_id,
+                    "searched_pattern": f"lesson_{lesson_id.zfill(2)}_*",
+                    "cwd": os.getcwd()
                 }
             }), 404
+        
+        logger.info(f"Found lesson directory: {lesson_dir}")
         
         lesson_data = {}
         
@@ -148,6 +216,19 @@ def get_lesson(lesson_id):
 def check_lesson_answer(lesson_id):
     """Check student's solution against the expected solution"""
     try:
+        # Rate limiting check
+        client_ip = _get_client_ip()
+        rate_check = _check_rate_limit(client_ip, 'lesson-check', max_requests=15, window_seconds=60)
+        
+        if not rate_check["allowed"]:
+            logger.warning(f"Rate limit exceeded for IP {client_ip} on /lesson/{lesson_id}/check")
+            return jsonify({
+                "status": "error",
+                "message": rate_check["message"],
+                "error_type": "rate_limit_error",
+                "retry_after": rate_check["retry_after"]
+            }), 429
+        
         # Get student code from request
         data = request.get_json()
         if not data or 'code' not in data:
@@ -230,14 +311,9 @@ def check_lesson_answer(lesson_id):
 def _load_lesson_data(lesson_id):
     """Load lesson data (reusable from get_lesson)"""
     try:
-        # Same path logic as get_lesson
-        if os.path.exists('lessons'):
-            lesson_dir = os.path.join('lessons', f'lesson_{lesson_id.zfill(2)}_the_first_room')
-        else:
-            project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-            lesson_dir = os.path.join(project_root, 'lessons', f'lesson_{lesson_id.zfill(2)}_the_first_room')
+        lesson_dir = find_lesson_directory(lesson_id)
         
-        if not os.path.exists(lesson_dir):
+        if not lesson_dir:
             return None
         
         lesson_data = {"lesson_id": lesson_id}
@@ -488,9 +564,81 @@ def _parse_python_error(error_output):
             "suggestion": "Read the error message carefully - it often tells you exactly what went wrong!"
         }
 
+def _validate_and_sanitize_code(code):
+    """
+    Validate and sanitize Python code for security
+    
+    Args:
+        code (str): Python code to validate
+        
+    Returns:
+        dict: Validation result with status and message
+    """
+    if not code or not isinstance(code, str):
+        return {
+            "valid": False,
+            "message": "No code provided or invalid type",
+            "error_type": "input_error"
+        }
+    
+    code = code.strip()
+    if not code:
+        return {
+            "valid": False,
+            "message": "Empty code provided",
+            "error_type": "input_error"
+        }
+    
+    if len(code) > app.config['MAX_CODE_LENGTH']:
+        return {
+            "valid": False,
+            "message": f"Code too long. Maximum {app.config['MAX_CODE_LENGTH']} characters allowed.",
+            "error_type": "input_error"
+        }
+    
+    # Security checks - block dangerous operations
+    dangerous_patterns = [
+        (r'\bopen\s*\(.*,\s*["\']w', "File writing operations are not allowed"),
+        (r'\bexec\s*\(', "exec() function is not allowed"),
+        (r'\beval\s*\(', "eval() function is not allowed"),
+        (r'\b__import__\s*\(', "__import__ function is not allowed"),
+        (r'\bsubprocess\b', "subprocess module is not allowed"),
+        (r'\bos\.system', "os.system is not allowed"),
+        (r'\bos\.popen', "os.popen is not allowed"),
+        (r'\bos\.remove', "File deletion is not allowed"),
+        (r'\bos\.unlink', "File deletion is not allowed"),
+        (r'\bshutil\b', "shutil module is not allowed"),
+        (r'\bsocket\b', "socket module is not allowed"),
+        (r'\bhttp\b', "HTTP modules are not allowed"),
+        (r'\burllib\b', "urllib module is not allowed"),
+        (r'\brequests\b', "requests module is not allowed"),
+    ]
+    
+    for pattern, message in dangerous_patterns:
+        if re.search(pattern, code, re.IGNORECASE):
+            return {
+                "valid": False,
+                "message": f"Security violation: {message}",
+                "error_type": "security_error"
+            }
+    
+    # Check for excessive complexity
+    line_count = len(code.split('\n'))
+    if line_count > 100:
+        return {
+            "valid": False,
+            "message": "Code too complex. Maximum 100 lines allowed.",
+            "error_type": "complexity_error"
+        }
+    
+    return {
+        "valid": True,
+        "sanitized_code": code
+    }
+
 def execute_python_code(code, timeout=None, data=None):
     """
-    Execute Python code safely with timeout
+    Execute Python code safely with timeout and validation
     
     Args:
         code (str): Python code to execute
@@ -509,20 +657,17 @@ def execute_python_code(code, timeout=None, data=None):
     if timeout is None:
         timeout = app.config['EXECUTION_TIMEOUT']
     
-    # Validate input
-    if not code or not code.strip():
+    # Validate and sanitize input
+    validation_result = _validate_and_sanitize_code(code)
+    if not validation_result["valid"]:
         return {
             "status": "error",
-            "message": "No code provided",
-            "error_type": "input_error"
+            "message": validation_result["message"],
+            "error_type": validation_result["error_type"]
         }
     
-    if len(code) > app.config['MAX_CODE_LENGTH']:
-        return {
-            "status": "error",
-            "message": f"Code too long. Maximum {app.config['MAX_CODE_LENGTH']} characters allowed.",
-            "error_type": "input_error"
-        }
+    # Use sanitized code
+    code = validation_result["sanitized_code"]
     
     # Initialize variables for input simulation (available in entire function scope)
     simulated_input = ""
@@ -551,17 +696,59 @@ def execute_python_code(code, timeout=None, data=None):
                 simulated_input = "\n".join(simulated_input_lines) + "\n"
                 logger.info(f"Using default simulated inputs: {simulated_input_lines}")
         
-        # Execute code with timeout
+        # Execute code with enhanced sandboxing
         try:
+            # Create safe environment variables
+            safe_env = {
+                'PYTHONPATH': '',
+                'PATH': '/usr/bin:/bin',  # Minimal PATH
+                'HOME': tempfile.gettempdir(),
+                'TMPDIR': tempfile.gettempdir(),
+                'PYTHONDONTWRITEBYTECODE': '1',  # Don't create .pyc files
+                'PYTHONIOENCODING': 'utf-8'
+            }
             
-            result = subprocess.run(
-                [sys.executable, "-W", "ignore", temp_file_path],  # Ignore warnings
-                input=simulated_input,  # Provide stdin input
-                capture_output=True,
-                text=True,
-                timeout=timeout,
-                cwd=tempfile.gettempdir()  # Run in temp directory for security
-            )
+            # Prepare subprocess arguments with security options
+            subprocess_args = {
+                'args': [sys.executable, "-W", "ignore", "-u", temp_file_path],  # -u for unbuffered output
+                'input': simulated_input,
+                'capture_output': True,
+                'text': True,
+                'timeout': timeout,
+                'cwd': tempfile.gettempdir(),
+                'env': safe_env
+            }
+            
+            # Add platform-specific security measures
+            if hasattr(subprocess, 'STARTUPINFO') and os.name == 'nt':
+                # Windows: Create new console
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                startupinfo.wShowWindow = subprocess.SW_HIDE
+                subprocess_args['startupinfo'] = startupinfo
+            elif os.name == 'posix':
+                # Unix/Linux: Additional security with resource limits
+                def preexec_fn():
+                    os.setpgrp()  # Create new process group
+                    try:
+                        import resource
+                        # Limit memory to 128MB
+                        resource.setrlimit(resource.RLIMIT_AS, (128 * 1024 * 1024, 128 * 1024 * 1024))
+                        # Limit CPU time to timeout + 2 seconds
+                        resource.setrlimit(resource.RLIMIT_CPU, (timeout + 2, timeout + 2))
+                        # Limit file size to 1MB
+                        resource.setrlimit(resource.RLIMIT_FSIZE, (1024 * 1024, 1024 * 1024))
+                        # Limit number of processes
+                        resource.setrlimit(resource.RLIMIT_NPROC, (10, 10))
+                    except ImportError:
+                        logger.warning("Resource module not available - basic sandboxing only")
+                    except Exception as e:
+                        logger.warning(f"Could not set resource limits: {e}")
+                
+                subprocess_args['preexec_fn'] = preexec_fn
+                
+            logger.info(f"Executing code in sandboxed environment (timeout: {timeout}s)")
+            result = subprocess.run(**subprocess_args)
             
             execution_time = time.time() - start_time
             
@@ -642,7 +829,20 @@ def run_code():
     Accepts JSON with 'code' field and returns execution results
     """
     try:
-        logger.info("Code execution endpoint called")
+        # Rate limiting check
+        client_ip = _get_client_ip()
+        rate_check = _check_rate_limit(client_ip, 'run-code', max_requests=20, window_seconds=60)
+        
+        if not rate_check["allowed"]:
+            logger.warning(f"Rate limit exceeded for IP {client_ip} on /api/run-code")
+            return jsonify({
+                "status": "error",
+                "message": rate_check["message"],
+                "error_type": "rate_limit_error",
+                "retry_after": rate_check["retry_after"]
+            }), 429
+        
+        logger.info(f"Code execution endpoint called from {client_ip} (remaining: {rate_check['requests_remaining']})")
         
         # Get JSON data
         data = request.get_json()
