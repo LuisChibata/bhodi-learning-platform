@@ -4,15 +4,15 @@
  */
 
 // Use modular API and Progress systems
-const API_BASE_URL = window.BhodiAPI.API_BASE_URL;
-const ENVIRONMENT = window.BhodiAPI.ENVIRONMENT;
+const API_BASE_URL = window.BhodiAPI ? window.BhodiAPI.API_BASE_URL : 'http://localhost:5000';
+const ENVIRONMENT = window.BhodiAPI ? window.BhodiAPI.ENVIRONMENT : { isDevelopment: true };
 
-// Progress shortcuts  
-const userProgress = window.BhodiProgress.userProgress;
-const loadProgress = window.BhodiProgress.loadProgress;
-const saveProgress = window.BhodiProgress.saveProgress;
-const updateLessonProgress = window.BhodiProgress.updateLessonProgress;
-const updateProgressBar = window.BhodiProgress.updateProgressBar;
+// Progress shortcuts - use functions from modules when available
+const getUserProgress = () => window.BhodiProgress ? window.BhodiProgress.userProgress : userProgress;
+const loadProgress = window.BhodiProgress ? window.BhodiProgress.loadProgress : loadProgressLocal;
+const saveProgress = window.BhodiProgress ? window.BhodiProgress.saveProgress : saveProgressLocal;
+const updateLessonProgress = window.BhodiProgress ? window.BhodiProgress.updateLessonProgress : updateLessonProgressLocal;
+const updateProgressBar = window.BhodiProgress ? window.BhodiProgress.updateProgressBar : updateProgressBarLocal;
 
 // Global code editor instance
 let codeEditor = null;
@@ -50,9 +50,9 @@ let userProgress = {
 };
 
 /**
- * Load progress from localStorage
+ * Load progress from localStorage (fallback)
  */
-function loadProgress() {
+function loadProgressLocal() {
     try {
         const savedProgress = localStorage.getItem(PROGRESS_STORAGE_KEY);
         if (savedProgress) {
@@ -68,9 +68,9 @@ function loadProgress() {
 }
 
 /**
- * Save progress to localStorage
+ * Save progress to localStorage (fallback)
  */
-function saveProgress() {
+function saveProgressLocal() {
     try {
         localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify(userProgress));
         console.log('💾 Progress saved:', userProgress);
@@ -80,9 +80,9 @@ function saveProgress() {
 }
 
 /**
- * Update lesson progress status
+ * Update lesson progress status (fallback)
  */
-function updateLessonProgress(lessonId, status) {
+function updateLessonProgressLocal(lessonId, status) {
     userProgress.lessonStatuses[lessonId] = status;
     
     if (status === 'completed' && !userProgress.completedLessons.includes(lessonId)) {
@@ -96,16 +96,16 @@ function updateLessonProgress(lessonId, status) {
 }
 
 /**
- * Update progress bar visual display
+ * Update progress bar visual display (fallback)
  */
-function updateProgressBar() {
+function updateProgressBarLocal() {
     const progressBar = document.querySelector('.progress-fill');
     const progressIndicator = document.querySelector('.progress-bar');
     
     if (progressBar && progressIndicator) {
         // For now, with only 1 lesson, calculate progress based on completion
         const totalLessons = 6; // Future lessons planned
-        const completedCount = userProgress.completedLessons.length;
+        const completedCount = getUserProgress().completedLessons.length;
         const progressPercentage = Math.round((completedCount / totalLessons) * 100);
         
         progressBar.style.width = `${progressPercentage}%`;
@@ -122,7 +122,7 @@ async function navigateToLesson(lessonId) {
     console.log(`🧭 Navigating to lesson ${lessonId}`);
     
     // Update current lesson in progress
-    userProgress.currentLesson = lessonId;
+    getUserProgress().currentLesson = lessonId;
     saveProgress();
     
     // Update lesson selector if it exists
@@ -181,7 +181,7 @@ function updateNavigationButtons() {
     const nextBtn = document.getElementById('next-btn');
     
     if (prevBtn && nextBtn) {
-        const currentLessonNum = parseInt(userProgress.currentLesson);
+        const currentLessonNum = parseInt(getUserProgress().currentLesson);
         
         // Previous button - disable if on first lesson
         prevBtn.disabled = (currentLessonNum <= 1);
@@ -225,7 +225,7 @@ async function loadLesson(lessonId) {
         updateCodeEditor(lessonData.starter_code);
         
         // Mark lesson as started if not already completed
-        if (!userProgress.lessonStatuses[lessonId] || userProgress.lessonStatuses[lessonId] === 'not_started') {
+        if (!getUserProgress().lessonStatuses[lessonId] || getUserProgress().lessonStatuses[lessonId] === 'not_started') {
             updateLessonProgress(lessonId, 'in_progress');
         }
         
@@ -413,7 +413,7 @@ document.addEventListener('DOMContentLoaded', function() {
     testBackendConnection();
     
     // Load current lesson from progress or default to Lesson 1
-    const startingLesson = userProgress.currentLesson || '01';
+    const startingLesson = getUserProgress().currentLesson || '01';
     navigateToLesson(startingLesson).catch(error => {
         console.error(`Failed to load lesson ${startingLesson}:`, error);
     });
@@ -800,7 +800,7 @@ function initializeButtons() {
     if (prevBtn) {
         prevBtn.addEventListener('click', async () => {
             try {
-                const currentLessonNum = parseInt(userProgress.currentLesson);
+                const currentLessonNum = parseInt(getUserProgress().currentLesson);
                 if (currentLessonNum > 1) {
                     const prevLessonId = String(currentLessonNum - 1).padStart(2, '0');
                     console.log(`⬅️ Navigating to previous lesson: ${prevLessonId}`);
@@ -820,7 +820,7 @@ function initializeButtons() {
     if (nextBtn) {
         nextBtn.addEventListener('click', async () => {
             try {
-                const currentLessonNum = parseInt(userProgress.currentLesson);
+                const currentLessonNum = parseInt(getUserProgress().currentLesson);
                 const nextLessonId = String(currentLessonNum + 1).padStart(2, '0');
                 console.log(`➡️ Navigating to next lesson: ${nextLessonId}`);
                 updateStatus('Loading next lesson...', 'running');
@@ -1315,7 +1315,7 @@ async function handleCheckAnswer() {
             updateStatus('Solution correct!', 'success');
             
             // Mark lesson as completed
-            const currentLessonId = currentLessonData?.lesson_id || userProgress.currentLesson;
+            const currentLessonId = currentLessonData?.lesson_id || getUserProgress().currentLesson;
             updateLessonProgress(currentLessonId, 'completed');
             
             console.log(`🎉 Lesson ${currentLessonId} completed! Progress updated.`);
@@ -1719,5 +1719,5 @@ window.BhodiPlatform = {
     updateLessonProgress,
     loadProgress,
     saveProgress,
-    userProgress: () => userProgress
+    userProgress: getUserProgress
 }; 
