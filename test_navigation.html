@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navigation Test - Bhodi Learning Platform</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .button { background: #007bff; color: white; border: none; padding: 10px 15px; margin: 5px; border-radius: 3px; cursor: pointer; }
+        .button:hover { background: #0056b3; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 3px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Navigation System Test</h1>
+    
+    <div class="test-section">
+        <h2>📊 Progress Status</h2>
+        <div id="progress-status" class="status info">Loading...</div>
+        <button class="button" onclick="updateProgressDisplay()">Refresh Progress</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>🧭 Navigation Tests</h2>
+        <button class="button" onclick="testNavigateNext()">Test Next Lesson</button>
+        <button class="button" onclick="testNavigatePrev()">Test Previous Lesson</button>
+        <button class="button" onclick="testNavigateSpecific()">Test Navigate to Lesson 1</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>💾 Progress Tests</h2>
+        <button class="button" onclick="testMarkCompleted()">Mark Lesson 1 Completed</button>
+        <button class="button" onclick="testClearProgress()">Clear All Progress</button>
+        <button class="button" onclick="testSaveLoad()">Test Save/Load</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>📋 Test Results</h2>
+        <div id="test-results" class="status info">Click test buttons to run tests</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🔍 Console Output</h2>
+        <div id="console-output">
+            <pre id="console-log">Console output will appear here...</pre>
+        </div>
+    </div>
+
+    <script>
+        // Mock localStorage for testing if needed
+        let mockLocalStorage = {};
+        
+        // Simple progress tracking system (copied from main.js)
+        const PROGRESS_STORAGE_KEY = 'bhodi_lesson_progress';
+        let userProgress = {
+            currentLesson: '01',
+            completedLessons: [],
+            lessonStatuses: {}
+        };
+        
+        function loadProgress() {
+            try {
+                const savedProgress = localStorage.getItem(PROGRESS_STORAGE_KEY);
+                if (savedProgress) {
+                    userProgress = { ...userProgress, ...JSON.parse(savedProgress) };
+                    log('✅ Progress loaded: ' + JSON.stringify(userProgress));
+                } else {
+                    log('📊 No saved progress found, using defaults');
+                }
+            } catch (error) {
+                log('❌ Error loading progress: ' + error.message);
+            }
+        }
+        
+        function saveProgress() {
+            try {
+                localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify(userProgress));
+                log('💾 Progress saved: ' + JSON.stringify(userProgress));
+            } catch (error) {
+                log('❌ Error saving progress: ' + error.message);
+            }
+        }
+        
+        function updateLessonProgress(lessonId, status) {
+            userProgress.lessonStatuses[lessonId] = status;
+            
+            if (status === 'completed' && !userProgress.completedLessons.includes(lessonId)) {
+                userProgress.completedLessons.push(lessonId);
+                log(`🎉 Lesson ${lessonId} marked as completed!`);
+            }
+            
+            saveProgress();
+        }
+        
+        // Logging function
+        function log(message) {
+            const consoleLog = document.getElementById('console-log');
+            const timestamp = new Date().toLocaleTimeString();
+            consoleLog.textContent += `[${timestamp}] ${message}\n`;
+            consoleLog.scrollTop = consoleLog.scrollHeight;
+            console.log(message);
+        }
+        
+        function updateProgressDisplay() {
+            loadProgress();
+            const statusDiv = document.getElementById('progress-status');
+            statusDiv.innerHTML = `
+                <strong>Current Lesson:</strong> ${userProgress.currentLesson}<br>
+                <strong>Completed Lessons:</strong> [${userProgress.completedLessons.join(', ')}]<br>
+                <strong>Lesson Statuses:</strong> ${JSON.stringify(userProgress.lessonStatuses)}<br>
+                <strong>Progress Percentage:</strong> ${Math.round((userProgress.completedLessons.length / 6) * 100)}%
+            `;
+        }
+        
+        function showResult(message, isSuccess = true) {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.className = `status ${isSuccess ? 'success' : 'error'}`;
+            resultsDiv.textContent = message;
+            log(message);
+        }
+        
+        // Test functions
+        function testNavigateNext() {
+            try {
+                const currentLessonNum = parseInt(userProgress.currentLesson);
+                const nextLessonId = String(currentLessonNum + 1).padStart(2, '0');
+                userProgress.currentLesson = nextLessonId;
+                saveProgress();
+                showResult(`✅ Navigation to next lesson successful: ${nextLessonId}`);
+                updateProgressDisplay();
+            } catch (error) {
+                showResult(`❌ Navigation to next lesson failed: ${error.message}`, false);
+            }
+        }
+        
+        function testNavigatePrev() {
+            try {
+                const currentLessonNum = parseInt(userProgress.currentLesson);
+                if (currentLessonNum > 1) {
+                    const prevLessonId = String(currentLessonNum - 1).padStart(2, '0');
+                    userProgress.currentLesson = prevLessonId;
+                    saveProgress();
+                    showResult(`✅ Navigation to previous lesson successful: ${prevLessonId}`);
+                } else {
+                    showResult(`ℹ️ Already at first lesson, cannot go back`);
+                }
+                updateProgressDisplay();
+            } catch (error) {
+                showResult(`❌ Navigation to previous lesson failed: ${error.message}`, false);
+            }
+        }
+        
+        function testNavigateSpecific() {
+            try {
+                userProgress.currentLesson = '01';
+                saveProgress();
+                showResult(`✅ Navigation to lesson 1 successful`);
+                updateProgressDisplay();
+            } catch (error) {
+                showResult(`❌ Navigation to lesson 1 failed: ${error.message}`, false);
+            }
+        }
+        
+        function testMarkCompleted() {
+            try {
+                updateLessonProgress('01', 'completed');
+                showResult(`✅ Lesson 1 marked as completed successfully`);
+                updateProgressDisplay();
+            } catch (error) {
+                showResult(`❌ Failed to mark lesson 1 as completed: ${error.message}`, false);
+            }
+        }
+        
+        function testClearProgress() {
+            try {
+                localStorage.removeItem(PROGRESS_STORAGE_KEY);
+                userProgress = {
+                    currentLesson: '01',
+                    completedLessons: [],
+                    lessonStatuses: {}
+                };
+                showResult(`✅ Progress cleared successfully`);
+                updateProgressDisplay();
+            } catch (error) {
+                showResult(`❌ Failed to clear progress: ${error.message}`, false);
+            }
+        }
+        
+        function testSaveLoad() {
+            try {
+                // Save test data
+                const testProgress = {
+                    currentLesson: '02',
+                    completedLessons: ['01'],
+                    lessonStatuses: { '01': 'completed', '02': 'in_progress' }
+                };
+                
+                localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify(testProgress));
+                
+                // Load it back
+                loadProgress();
+                
+                // Verify
+                if (userProgress.currentLesson === '02' && 
+                    userProgress.completedLessons.includes('01') &&
+                    userProgress.lessonStatuses['01'] === 'completed') {
+                    showResult(`✅ Save/Load test successful`);
+                } else {
+                    showResult(`❌ Save/Load test failed: data mismatch`, false);
+                }
+                updateProgressDisplay();
+            } catch (error) {
+                showResult(`❌ Save/Load test failed: ${error.message}`, false);
+            }
+        }
+        
+        // Initialize
+        window.addEventListener('load', function() {
+            log('🧪 Navigation test page loaded');
+            updateProgressDisplay();
+        });
+    </script>
+</body>
+</html>

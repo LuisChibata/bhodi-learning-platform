@@ -73,6 +73,158 @@ print("   Keep learning to discover why!"`;
 // Current lesson data storage
 let currentLessonData = null;
 
+// Progress tracking system
+const PROGRESS_STORAGE_KEY = 'bhodi_lesson_progress';
+let userProgress = {
+    currentLesson: '01',
+    completedLessons: [],
+    lessonStatuses: {} // 'not_started', 'in_progress', 'completed'
+};
+
+/**
+ * Load progress from localStorage
+ */
+function loadProgress() {
+    try {
+        const savedProgress = localStorage.getItem(PROGRESS_STORAGE_KEY);
+        if (savedProgress) {
+            userProgress = { ...userProgress, ...JSON.parse(savedProgress) };
+            console.log('📊 Progress loaded:', userProgress);
+        } else {
+            console.log('📊 No saved progress found, using defaults');
+        }
+    } catch (error) {
+        console.error('❌ Error loading progress:', error);
+        // Use default progress if loading fails
+    }
+}
+
+/**
+ * Save progress to localStorage
+ */
+function saveProgress() {
+    try {
+        localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify(userProgress));
+        console.log('💾 Progress saved:', userProgress);
+    } catch (error) {
+        console.error('❌ Error saving progress:', error);
+    }
+}
+
+/**
+ * Update lesson progress status
+ */
+function updateLessonProgress(lessonId, status) {
+    userProgress.lessonStatuses[lessonId] = status;
+    
+    if (status === 'completed' && !userProgress.completedLessons.includes(lessonId)) {
+        userProgress.completedLessons.push(lessonId);
+        console.log(`🎉 Lesson ${lessonId} marked as completed!`);
+    }
+    
+    saveProgress();
+    updateProgressBar();
+    updateNavigationButtons();
+}
+
+/**
+ * Update progress bar visual display
+ */
+function updateProgressBar() {
+    const progressBar = document.querySelector('.progress-fill');
+    const progressIndicator = document.querySelector('.progress-bar');
+    
+    if (progressBar && progressIndicator) {
+        // For now, with only 1 lesson, calculate progress based on completion
+        const totalLessons = 6; // Future lessons planned
+        const completedCount = userProgress.completedLessons.length;
+        const progressPercentage = Math.round((completedCount / totalLessons) * 100);
+        
+        progressBar.style.width = `${progressPercentage}%`;
+        progressIndicator.setAttribute('aria-valuenow', progressPercentage);
+        
+        console.log(`📊 Progress bar updated: ${completedCount}/${totalLessons} (${progressPercentage}%)`);
+    }
+}
+
+/**
+ * Navigate to a specific lesson
+ */
+async function navigateToLesson(lessonId) {
+    console.log(`🧭 Navigating to lesson ${lessonId}`);
+    
+    // Update current lesson in progress
+    userProgress.currentLesson = lessonId;
+    saveProgress();
+    
+    // Update lesson selector if it exists
+    const lessonSelector = document.getElementById('lesson-selector');
+    if (lessonSelector) {
+        lessonSelector.value = parseInt(lessonId);
+    }
+    
+    try {
+        await loadLesson(lessonId);
+        updateNavigationButtons();
+    } catch (error) {
+        console.error(`❌ Failed to navigate to lesson ${lessonId}:`, error);
+        showComingSoonMessage(lessonId);
+    }
+}
+
+/**
+ * Show "Coming Soon" message for unavailable lessons
+ */
+function showComingSoonMessage(lessonId) {
+    const problemContent = document.getElementById('problem-content');
+    if (problemContent) {
+        problemContent.innerHTML = `
+            <h1>🚧 Lesson ${parseInt(lessonId)}: Coming Soon!</h1>
+            <p><strong>This lesson is currently under development.</strong></p>
+            <p>We're working hard to create more engaging "Try Not to Quit" lessons for you!</p>
+            <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+                <h3>📚 What to expect in future lessons:</h3>
+                <ul>
+                    <li><strong>Lesson 2</strong>: Add guilt-trip responses when trying to quit</li>
+                    <li><strong>Lesson 3</strong>: Create fake progress that would be "lost"</li>
+                    <li><strong>Lesson 4</strong>: Build infinite retry loops with fake loading</li>
+                    <li><strong>Lesson 5</strong>: Create "Retention Agents" (AI-like helpers)</li>
+                    <li><strong>Lesson 6</strong>: Build inheritance hierarchy of retention tactics</li>
+                </ul>
+            </div>
+            <p>👈 <strong>Use the "Previous" button to return to available lessons!</strong></p>
+        `;
+    }
+    
+    // Clear code editor
+    if (codeEditor && codeEditor.setValue) {
+        codeEditor.setValue('// This lesson is not available yet.\n// Return to Lesson 1 to continue learning!');
+    }
+    
+    // Show message in output
+    showOutput(`Lesson ${parseInt(lessonId)} is coming soon! 🚧\n\nReturn to Lesson 1 to continue your "Try Not to Quit" journey.`);
+}
+
+/**
+ * Update navigation button states
+ */
+function updateNavigationButtons() {
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    
+    if (prevBtn && nextBtn) {
+        const currentLessonNum = parseInt(userProgress.currentLesson);
+        
+        // Previous button - disable if on first lesson
+        prevBtn.disabled = (currentLessonNum <= 1);
+        
+        // Next button - always enabled (will show "coming soon" for unavailable lessons)
+        nextBtn.disabled = false;
+        
+        console.log(`🔘 Navigation buttons updated for lesson ${currentLessonNum}`);
+    }
+}
+
 /**
  * Load lesson content from the backend
  */
@@ -103,6 +255,11 @@ async function loadLesson(lessonId) {
         
         // Update code editor with starter code
         updateCodeEditor(lessonData.starter_code);
+        
+        // Mark lesson as started if not already completed
+        if (!userProgress.lessonStatuses[lessonId] || userProgress.lessonStatuses[lessonId] === 'not_started') {
+            updateLessonProgress(lessonId, 'in_progress');
+        }
         
         console.log(`✅ Lesson ${lessonId} loaded successfully`);
         return lessonData;
@@ -279,14 +436,18 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Initializing Bhodi Learning Platform...');
     console.log(`📍 Running in ${ENVIRONMENT.isDevelopment ? 'development' : 'production'} mode`);
     
+    // Load saved progress first
+    loadProgress();
+    
     initializeTabs();
     initializeButtons();
     initializeCodeEditor();
     testBackendConnection();
     
-    // Load default lesson (Lesson 1)
-    loadLesson('01').catch(error => {
-        console.error('Failed to load default lesson:', error);
+    // Load current lesson from progress or default to Lesson 1
+    const startingLesson = userProgress.currentLesson || '01';
+    navigateToLesson(startingLesson).catch(error => {
+        console.error(`Failed to load lesson ${startingLesson}:`, error);
     });
     
     console.log('✅ Platform initialization complete!');
@@ -667,16 +828,40 @@ function initializeButtons() {
         });
     }
     
-    // Navigation buttons (still placeholders)
+    // Navigation buttons - functional implementation
     if (prevBtn) {
-        prevBtn.addEventListener('click', () => {
-            console.log('Previous lesson - functionality will be added in Step 11');
+        prevBtn.addEventListener('click', async () => {
+            try {
+                const currentLessonNum = parseInt(userProgress.currentLesson);
+                if (currentLessonNum > 1) {
+                    const prevLessonId = String(currentLessonNum - 1).padStart(2, '0');
+                    console.log(`⬅️ Navigating to previous lesson: ${prevLessonId}`);
+                    updateStatus('Loading previous lesson...', 'running');
+                    await navigateToLesson(prevLessonId);
+                    updateStatus('Ready', 'ready');
+                } else {
+                    console.log('⬅️ Already at first lesson');
+                }
+            } catch (error) {
+                console.error('❌ Error navigating to previous lesson:', error);
+                updateStatus('Navigation failed', 'error');
+            }
         });
     }
     
     if (nextBtn) {
-        nextBtn.addEventListener('click', () => {
-            console.log('Next lesson - functionality will be added in Step 11');
+        nextBtn.addEventListener('click', async () => {
+            try {
+                const currentLessonNum = parseInt(userProgress.currentLesson);
+                const nextLessonId = String(currentLessonNum + 1).padStart(2, '0');
+                console.log(`➡️ Navigating to next lesson: ${nextLessonId}`);
+                updateStatus('Loading next lesson...', 'running');
+                await navigateToLesson(nextLessonId);
+                updateStatus('Ready', 'ready');
+            } catch (error) {
+                console.error('❌ Error navigating to next lesson:', error);
+                updateStatus('Navigation failed', 'error');
+            }
         });
     }
     
@@ -1157,9 +1342,15 @@ async function handleCheckAnswer() {
         // Display feedback based on result
         displayAnswerFeedback(result);
         
-        // Update status
+        // Update status and progress
         if (result.correct) {
             updateStatus('Solution correct!', 'success');
+            
+            // Mark lesson as completed
+            const currentLessonId = currentLessonData?.lesson_id || userProgress.currentLesson;
+            updateLessonProgress(currentLessonId, 'completed');
+            
+            console.log(`🎉 Lesson ${currentLessonId} completed! Progress updated.`);
         } else {
             updateStatus('Try again', 'warning');
         }
@@ -1554,5 +1745,11 @@ window.BhodiPlatform = {
     updateStatus,
     getCurrentCode,
     setCode,
-    codeEditor: () => codeEditor
+    codeEditor: () => codeEditor,
+    // New navigation functions for testing
+    navigateToLesson,
+    updateLessonProgress,
+    loadProgress,
+    saveProgress,
+    userProgress: () => userProgress
 }; 
