@@ -209,7 +209,7 @@ async function loadLesson(lessonId) {
         }
         
         const lessonData = await response.json();
-        console.log(`📄 Lesson data received:`, lessonData);
+        console.log('📄 Lesson data received:', lessonData);
         
         if (lessonData.status === 'error') {
             throw new Error(lessonData.message || 'Unknown API error');
@@ -238,7 +238,7 @@ async function loadLesson(lessonId) {
         
         // If lesson endpoint doesn't exist, use fallback content for Lesson 1
         if (lessonId === '01' && (error.message.includes('404') || error.message.includes('not found'))) {
-            console.log(`📦 Using fallback content for Lesson 1`);
+            console.log('📦 Using fallback content for Lesson 1');
             
             const fallbackLessonData = {
                 lesson_id: '01',
@@ -360,7 +360,7 @@ function updateProblemStatement(markdown) {
     console.log('🎯 Problem content element found, converting markdown...');
     
     // Simple markdown-to-HTML conversion
-    let html = markdown
+    const html = markdown
         .replace(/^# (.+)$/gm, '<h1>$1</h1>')
         .replace(/^## (.+)$/gm, '<h2>$1</h2>')
         .replace(/^### (.+)$/gm, '<h3>$1</h3>')
@@ -490,24 +490,24 @@ function setupCodeMirror() {
             lineWrapping: true,
             viewportMargin: Infinity,
             extraKeys: {
-                "Tab": function(cm) {
+                'Tab': function(cm) {
                     if (cm.somethingSelected()) {
-                        cm.indentSelection("add");
+                        cm.indentSelection('add');
                     } else {
-                        cm.replaceSelection("    ", "end");
+                        cm.replaceSelection('    ', 'end');
                     }
                 }
             }
         });
         
         // Style the CodeMirror editor
-        codeEditor.setSize("100%", "100%");
+        codeEditor.setSize('100%', '100%');
         
         // Add some custom styling
         const wrapper = codeEditor.getWrapperElement();
-        wrapper.style.height = "100%";
-        wrapper.style.fontSize = "14px";
-        wrapper.style.fontFamily = "'Consolas', 'Monaco', 'Courier New', monospace";
+        wrapper.style.height = '100%';
+        wrapper.style.fontSize = '14px';
+        wrapper.style.fontFamily = '\'Consolas\', \'Monaco\', \'Courier New\', monospace';
         
         console.log('CodeMirror 5 editor created successfully!');
         updateStatus('CodeMirror ready', 'ready');
@@ -1086,14 +1086,14 @@ async function handleRunCode() {
             // Add input simulation information if present
             if (result.simulated_input) {
                 formattedOutput += `\n${'─'.repeat(40)}\n`;
-                formattedOutput += `📝 Input Simulation: Your code used input() functions\n`;
+                formattedOutput += '📝 Input Simulation: Your code used input() functions\n';
                 formattedOutput += `🎮 Simulated inputs: ${result.simulated_input.map(inp => `"${inp}"`).join(', ')}\n`;
-                formattedOutput += `💡 In a real program, users would type these values\n`;
+                formattedOutput += '💡 In a real program, users would type these values\n';
                 formattedOutput += `${'─'.repeat(40)}\n`;
             }
             
             formattedOutput += `\n${'='.repeat(50)}\n`;
-            formattedOutput += `✅ Execution completed successfully!\n`;
+            formattedOutput += '✅ Execution completed successfully!\n';
             formattedOutput += `⏱️  Server time: ${executionTime}\n`;
             formattedOutput += `🌐 Total time: ${clientTime}s\n`;
             formattedOutput += `📝 Code lines: ${code.split('\n').length}\n`;
@@ -1131,13 +1131,13 @@ async function handleRunCode() {
         updateStatus('Execution failed', 'error');
         
         // Enhanced error message
-        let errorOutput = `❌ Failed to execute code\n\n`;
+        let errorOutput = '❌ Failed to execute code\n\n';
         errorOutput += `🔍 Error Details: ${error.message}\n\n`;
-        errorOutput += `🛠️  Troubleshooting steps:\n`;
-        errorOutput += `1. Check if backend server is running (http://localhost:5000)\n`;
-        errorOutput += `2. Verify internet connection is stable\n`;
-        errorOutput += `3. Try refreshing the page\n`;
-        errorOutput += `4. Check browser console for detailed errors\n\n`;
+        errorOutput += '🛠️  Troubleshooting steps:\n';
+        errorOutput += '1. Check if backend server is running (http://localhost:5000)\n';
+        errorOutput += '2. Verify internet connection is stable\n';
+        errorOutput += '3. Try refreshing the page\n';
+        errorOutput += '4. Check browser console for detailed errors\n\n';
         errorOutput += `⏱️  Failed after: ${((Date.now() - (Date.now() - 3000)) / 1000).toFixed(1)}s`;
         
         showOutput(errorOutput);
@@ -1163,7 +1163,7 @@ function isValidPythonBasic(code) {
     const lines = code.split('\n');
     let indentLevel = 0;
     
-    for (let line of lines) {
+    for (const line of lines) {
         const trimmed = line.trim();
         if (trimmed === '') continue;
         
@@ -1217,41 +1217,41 @@ function handleExecutionError(result, clientTime) {
         // Fallback to the old error handling for cases without enhanced parsing
         switch (errorType) {
             case 'timeout_error':
-                errorMessage = `⏱️ Timeout Error\n\n`;
+                errorMessage = '⏱️ Timeout Error\n\n';
                 errorMessage += `Your code took too long to execute (over ${result.timeout}s).\n\n`;
-                errorMessage += `💡 Tips:\n`;
-                errorMessage += `• Check for infinite loops (while True, for loops without end)\n`;
-                errorMessage += `• Reduce the complexity of your code\n`;
-                errorMessage += `• Avoid long-running operations\n`;
-                errorMessage += `• Use smaller data sets for testing\n\n`;
+                errorMessage += '💡 Tips:\n';
+                errorMessage += '• Check for infinite loops (while True, for loops without end)\n';
+                errorMessage += '• Reduce the complexity of your code\n';
+                errorMessage += '• Avoid long-running operations\n';
+                errorMessage += '• Use smaller data sets for testing\n\n';
                 errorMessage += `⏱️ Total time: ${clientTime}s`;
                 break;
                 
             case 'input_error':
-                errorMessage = `📝 Input Error\n\n`;
+                errorMessage = '📝 Input Error\n\n';
                 errorMessage += `${result.message}\n\n`;
-                errorMessage += `Please enter some Python code to execute.\n\n`;
-                errorMessage += `💡 Example:\nprint("Hello, World!")\nx = 5\nprint(f"x = {x}")`;
+                errorMessage += 'Please enter some Python code to execute.\n\n';
+                errorMessage += '💡 Example:\nprint("Hello, World!")\nx = 5\nprint(f"x = {x}")';
                 break;
                 
             case 'system_error':
-                errorMessage = `⚙️ System Error\n\n`;
+                errorMessage = '⚙️ System Error\n\n';
                 errorMessage += `${result.message}\n\n`;
-                errorMessage += `This appears to be a server configuration issue.\n`;
-                errorMessage += `Please try again or contact support if the problem persists.`;
+                errorMessage += 'This appears to be a server configuration issue.\n';
+                errorMessage += 'Please try again or contact support if the problem persists.';
                 break;
                 
             default:
                 // Generic error handling for unknown error types
                 const stderr = result.error_output || result.message || 'Unknown error';
-                errorMessage = `❌ Error Occurred\n\n`;
+                errorMessage = '❌ Error Occurred\n\n';
                 errorMessage += `${stderr}\n\n`;
                 errorMessage += `⏱️ Execution time: ${executionTime}\n`;
                 errorMessage += `🌐 Total time: ${clientTime}s\n`;
                 if (result.output) {
                     errorMessage += `\n📤 Output before error:\n${result.output}\n`;
                 }
-                errorMessage += `\n💡 Tip: Check the error message above for specific line numbers and fix suggestions.`;
+                errorMessage += '\n💡 Tip: Check the error message above for specific line numbers and fix suggestions.';
                 break;
         }
     }
@@ -1301,7 +1301,7 @@ async function handleCheckAnswer() {
         }
         
         const result = await response.json();
-        console.log(`📊 Check result:`, result);
+        console.log('📊 Check result:', result);
         
         if (result.status === 'error') {
             throw new Error(result.message || 'Unknown error occurred');
@@ -1365,7 +1365,7 @@ function displayAnswerFeedback(result) {
     
     // Add hints if available
     if (result.hints && result.hints.length > 0) {
-        feedbackMessage += `💡 Hints:\n`;
+        feedbackMessage += '💡 Hints:\n';
         result.hints.forEach((hint, index) => {
             feedbackMessage += `${index + 1}. ${hint}\n`;
         });
@@ -1593,14 +1593,14 @@ async function executeCodeWithInputs(code, userInputs) {
             
             if (result.simulated_input) {
                 formattedOutput += `\n${'─'.repeat(40)}\n`;
-                formattedOutput += `📝 Input Simulation: Your code used input() functions\n`;
+                formattedOutput += '📝 Input Simulation: Your code used input() functions\n';
                 formattedOutput += `🎮 Simulated inputs: ${result.simulated_input.map(inp => `"${inp}"`).join(', ')}\n`;
-                formattedOutput += `💡 In a real program, users would type these values\n`;
+                formattedOutput += '💡 In a real program, users would type these values\n';
                 formattedOutput += `${'─'.repeat(40)}\n`;
             }
             
             formattedOutput += `\n${'='.repeat(50)}\n`;
-            formattedOutput += `✅ Execution completed successfully! (Quick re-run)\n`;
+            formattedOutput += '✅ Execution completed successfully! (Quick re-run)\n';
             formattedOutput += `⏱️  Server time: ${executionTime}\n`;
             formattedOutput += `🌐 Total time: ${clientTime}s\n`;
             formattedOutput += `📝 Code lines: ${code.split('\n').length}\n`;
@@ -1625,9 +1625,9 @@ async function executeCodeWithInputs(code, userInputs) {
         console.error('Error in quick re-run:', error);
         updateStatus('Execution failed', 'error');
         
-        let errorOutput = `❌ Failed to execute code (quick re-run)\n\n`;
+        let errorOutput = '❌ Failed to execute code (quick re-run)\n\n';
         errorOutput += `🔍 Error Details: ${error.message}\n\n`;
-        errorOutput += `🛠️  Try refreshing the page or running the code normally.\n`;
+        errorOutput += '🛠️  Try refreshing the page or running the code normally.\n';
         
         showOutput(errorOutput);
         
