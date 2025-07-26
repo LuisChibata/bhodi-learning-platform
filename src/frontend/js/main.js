@@ -41,6 +41,10 @@ print("   Keep learning to discover why!"`;
 // Current lesson data storage
 let currentLessonData = null;
 
+// Header functionality - Version and Session Tracking
+let sessionStartTime = null;
+let sessionTimer = null;
+
 // Progress tracking system
 const PROGRESS_STORAGE_KEY = 'bhodi_lesson_progress';
 let userProgress = {
@@ -112,6 +116,186 @@ function updateProgressBarLocal() {
         progressIndicator.setAttribute('aria-valuenow', progressPercentage);
         
         console.log(`📊 Progress bar updated: ${completedCount}/${totalLessons} (${progressPercentage}%)`);
+    }
+    
+    // Update header progress display as well
+    updateProgressDisplay();
+}
+
+/**
+ * ===================================
+ * Enhanced Header Functionality
+ * ===================================
+ */
+
+/**
+ * Initialize session tracking and header features
+ */
+function initializeHeaderFeatures() {
+    console.log('🎯 Initializing simple auto-hiding header...');
+    
+    let lastScrollTop = 0;
+    const header = document.querySelector('.header');
+    
+    if (!header) {
+        console.warn('Header element not found');
+        return;
+    }
+    
+    function handleScroll() {
+        const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        
+        if (currentScrollTop > lastScrollTop && currentScrollTop > 100) {
+            // Scrolling down - hide header
+            header.classList.add('header-hidden');
+        } else {
+            // Scrolling up - show header
+            header.classList.remove('header-hidden');
+        }
+        
+        lastScrollTop = currentScrollTop <= 0 ? 0 : currentScrollTop;
+    }
+    
+    // Add scroll listener with throttling
+    let ticking = false;
+    function onScroll() {
+        if (!ticking) {
+            requestAnimationFrame(function() {
+                handleScroll();
+                ticking = false;
+            });
+            ticking = true;
+        }
+    }
+    
+    window.addEventListener('scroll', onScroll, { passive: true });
+    
+    console.log('✅ Auto-hiding header initialized successfully');
+}
+
+/**
+ * Initialize session timer functionality
+ */
+function initializeSessionTimer() {
+    sessionStartTime = new Date();
+    
+    // Update session duration every second
+    sessionTimer = setInterval(() => {
+        updateSessionDuration();
+    }, 1000);
+    
+    console.log('⏱️ Session timer started');
+}
+
+/**
+ * Update session duration display
+ */
+function updateSessionDuration() {
+    if (!sessionStartTime) return;
+    
+    const now = new Date();
+    const sessionDuration = Math.floor((now - sessionStartTime) / 1000);
+    
+    const hours = Math.floor(sessionDuration / 3600);
+    const minutes = Math.floor((sessionDuration % 3600) / 60);
+    const seconds = sessionDuration % 60;
+    
+    const timeString = hours > 0 
+        ? `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+        : `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    
+    const sessionDurationElement = document.getElementById('session-duration');
+    if (sessionDurationElement) {
+        sessionDurationElement.textContent = timeString;
+    }
+}
+
+/**
+ * Initialize user information display
+ */
+function initializeUserInfo() {
+    const userNameElement = document.getElementById('user-name');
+    if (userNameElement) {
+        // Check for saved user name, otherwise use default
+        const savedUserName = localStorage.getItem('bhodi_user_name');
+        if (savedUserName) {
+            userNameElement.textContent = savedUserName;
+        } else {
+            userNameElement.textContent = 'Anonymous Student';
+        }
+    }
+}
+
+/**
+ * Update progress display in header
+ */
+function updateProgressDisplay() {
+    const progressTextElement = document.getElementById('progress-text');
+    const lessonCounterElement = document.getElementById('lesson-counter');
+    
+    if (progressTextElement && lessonCounterElement) {
+        const totalLessons = 6;
+        const completedCount = getUserProgress().completedLessons.length;
+        const progressPercentage = Math.round((completedCount / totalLessons) * 100);
+        const currentLessonNum = parseInt(getUserProgress().currentLesson) || 1;
+        
+        progressTextElement.textContent = `${progressPercentage}% Complete`;
+        lessonCounterElement.textContent = `Lesson ${currentLessonNum} of ${totalLessons}`;
+    }
+}
+
+/**
+ * Setup quick run button functionality
+ */
+function setupQuickRunButton() {
+    const quickRunBtn = document.getElementById('quick-run-btn');
+    if (quickRunBtn) {
+        quickRunBtn.addEventListener('click', () => {
+            console.log('🚀 Quick run button clicked');
+            const runBtn = document.getElementById('run-btn');
+            if (runBtn) {
+                runBtn.click();
+            }
+        });
+    }
+}
+
+/**
+ * Update version information display
+ */
+function updateVersionInfo() {
+    const versionDisplay = document.getElementById('version-display');
+    const buildStatus = document.getElementById('build-status');
+    
+    if (versionDisplay) {
+        // Version is already set in HTML, but we can update it programmatically if needed
+        versionDisplay.textContent = 'v2.1.0';
+    }
+    
+    if (buildStatus) {
+        // Check if we're in development or production
+        const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        if (isDev) {
+            buildStatus.textContent = '🔧 Development';
+            buildStatus.style.color = 'var(--warning-color)';
+        } else {
+            buildStatus.textContent = '✅ Stable';
+            buildStatus.style.color = 'var(--success-color)';
+        }
+    }
+}
+
+/**
+ * Update navigation display in header
+ */
+function updateNavigationDisplay() {
+    updateProgressDisplay();
+    
+    // Update lesson selector if needed
+    const lessonSelector = document.getElementById('lesson-selector');
+    if (lessonSelector) {
+        const currentLessonNum = parseInt(getUserProgress().currentLesson) || 1;
+        lessonSelector.value = currentLessonNum;
     }
 }
 
@@ -633,6 +817,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize dark mode (must be early to prevent flash)
     initializeDarkMode();
     setupSystemThemeListener();
+    
+    // Initialize enhanced header features
+    initializeHeaderFeatures();
     
     initializeTabs();
     initializeButtons();
