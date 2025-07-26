@@ -184,12 +184,12 @@ input:focus {
    Professional Header Design
    =================================== */
 
-/* Simple Static Header */
+/* Header as normal content */
 .header {
-    position: static;
     background: var(--bg-primary);
     border-bottom: 1px solid var(--border-color);
     padding: var(--space-sm) var(--space-lg);
+    margin-bottom: var(--space-md);
     box-shadow: var(--shadow-sm);
 }
 
@@ -1402,11 +1402,7 @@ input:focus {
     
     .header {
         padding: var(--space-md);
-        grid-template-columns: 1fr;
-        gap: var(--space-md);
-        position: sticky;
-        top: 0;
-        z-index: 100;
+        margin-bottom: var(--space-sm);
     }
     
     .brand-section {

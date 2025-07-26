@@ -43,28 +43,27 @@
     <!-- Skip to main content for keyboard navigation -->
     <a href="#main-content" class="skip-link">Skip to main content</a>
     
-    <!-- Simple Auto-hiding Header -->
-    <header class="header" role="banner">
-        <div class="header-content">
-            <h1 class="platform-title">Bhodi Learning Platform</h1>
-            <div class="header-nav">
-                <select id="lesson-selector" class="lesson-selector" aria-label="Select lesson">
-                    <option value="1">Lesson 1: The First Room</option>
-                    <option value="3">Lesson 3: Interactive Button</option>
-                </select>
-            </div>
-            <div class="header-info">
-                <span class="version-badge">v2.1.0</span>
-                <button id="dark-mode-toggle" class="header-btn" aria-label="Toggle dark mode" title="Toggle Dark Mode">
-                    <span class="light-icon">☀️</span>
-                    <span class="dark-icon">🌙</span>
-                </button>
-            </div>
-        </div>
-    </header>
-
     <!-- Main Content Area -->
     <main id="main-content" class="main-content" role="main">
+        <!-- Header as part of content -->
+        <header class="header" role="banner">
+            <div class="header-content">
+                <h1 class="platform-title">Bhodi Learning Platform</h1>
+                <div class="header-nav">
+                    <select id="lesson-selector" class="lesson-selector" aria-label="Select lesson">
+                        <option value="1">Lesson 1: The First Room</option>
+                        <option value="3">Lesson 3: Interactive Button</option>
+                    </select>
+                </div>
+                <div class="header-info">
+                    <span class="version-badge">v2.1.0</span>
+                    <button id="dark-mode-toggle" class="header-btn" aria-label="Toggle dark mode" title="Toggle Dark Mode">
+                        <span class="light-icon">☀️</span>
+                        <span class="dark-icon">🌙</span>
+                    </button>
+                </div>
+            </div>
+        </header>
         <!-- Problem Statement Panel - Full Width -->
         <section class="problem-panel" aria-label="Lesson problem statement">
             <div class="problem-statement" role="region" aria-labelledby="problem-heading">
