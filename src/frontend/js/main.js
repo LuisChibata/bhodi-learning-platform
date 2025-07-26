@@ -132,45 +132,11 @@ function updateProgressBarLocal() {
  * Initialize session tracking and header features
  */
 function initializeHeaderFeatures() {
-    console.log('🎯 Initializing simple auto-hiding header...');
+    console.log('🎯 Initializing simple static header...');
     
-    let lastScrollTop = 0;
-    const header = document.querySelector('.header');
+    // Header is now static - no special functionality needed
     
-    if (!header) {
-        console.warn('Header element not found');
-        return;
-    }
-    
-    function handleScroll() {
-        const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        
-        if (currentScrollTop > lastScrollTop && currentScrollTop > 100) {
-            // Scrolling down - hide header
-            header.classList.add('header-hidden');
-        } else {
-            // Scrolling up - show header
-            header.classList.remove('header-hidden');
-        }
-        
-        lastScrollTop = currentScrollTop <= 0 ? 0 : currentScrollTop;
-    }
-    
-    // Add scroll listener with throttling
-    let ticking = false;
-    function onScroll() {
-        if (!ticking) {
-            requestAnimationFrame(function() {
-                handleScroll();
-                ticking = false;
-            });
-            ticking = true;
-        }
-    }
-    
-    window.addEventListener('scroll', onScroll, { passive: true });
-    
-    console.log('✅ Auto-hiding header initialized successfully');
+    console.log('✅ Static header initialized successfully');
 }
 
 /**

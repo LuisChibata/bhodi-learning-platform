@@ -184,26 +184,13 @@ input:focus {
    Professional Header Design
    =================================== */
 
-/* Simple Auto-hiding Header */
+/* Simple Static Header */
 .header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
+    position: static;
     background: var(--bg-primary);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--border-color);
     padding: var(--space-sm) var(--space-lg);
-    z-index: 1000;
-    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
-    transform: translateY(0);
-    opacity: 1;
-}
-
-.header.header-hidden {
-    transform: translateY(-100%);
-    opacity: 0;
+    box-shadow: var(--shadow-sm);
 }
 
 .header-content {
@@ -212,6 +199,35 @@ input:focus {
     align-items: center;
     max-width: 1200px;
     margin: 0 auto;
+    gap: var(--space-lg);
+}
+
+.header-nav {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.lesson-selector {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    min-width: 200px;
+}
+
+.lesson-selector:hover {
+    background: var(--bg-hover);
+    border-color: var(--primary-color);
+}
+
+.lesson-selector:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
 }
 
 .platform-title {
@@ -255,9 +271,43 @@ input:focus {
     transform: translateY(-1px);
 }
 
-/* Main content offset for fixed header */
+/* Main content - no offset needed for static header */
 .main-content {
-    margin-top: 80px;
+    margin-top: 0;
+}
+
+/* Mobile responsive styles for header */
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        gap: var(--space-sm);
+        padding: var(--space-sm);
+    }
+    
+    .platform-title {
+        font-size: var(--font-size-md);
+        text-align: center;
+    }
+    
+    .header-nav {
+        order: 2;
+        width: 100%;
+    }
+    
+    .lesson-selector {
+        width: 100%;
+        min-width: unset;
+    }
+    
+    .header-info {
+        order: 3;
+        justify-content: center;
+        gap: var(--space-lg);
+    }
+    
+    .main-content {
+        margin-top: 0;
+    }
 }
 
 /* Brand Section */
