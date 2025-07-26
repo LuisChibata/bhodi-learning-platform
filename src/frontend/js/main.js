@@ -121,22 +121,26 @@ function updateProgressBarLocal() {
 async function navigateToLesson(lessonId) {
     console.log(`🧭 Navigating to lesson ${lessonId}`);
     
-    // Update current lesson in progress
-    getUserProgress().currentLesson = lessonId;
-    saveProgress();
-    
-    // Update lesson selector if it exists
-    const lessonSelector = document.getElementById('lesson-selector');
-    if (lessonSelector) {
-        lessonSelector.value = parseInt(lessonId);
-    }
-    
     try {
         await loadLesson(lessonId);
+        
+        // Only update progress if lesson loads successfully
+        getUserProgress().currentLesson = lessonId;
+        saveProgress();
+        
+        // Update lesson selector if it exists
+        const lessonSelector = document.getElementById('lesson-selector');
+        if (lessonSelector) {
+            lessonSelector.value = parseInt(lessonId);
+        }
+        
         updateNavigationButtons();
     } catch (error) {
         console.error(`❌ Failed to navigate to lesson ${lessonId}:`, error);
         showComingSoonMessage(lessonId);
+        
+        // Don't save invalid lesson to progress
+        console.log(`🚫 Not saving lesson ${lessonId} to progress (lesson failed to load)`);
     }
 }
 
@@ -626,15 +630,36 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load saved progress first
     loadProgress();
     
+    // Initialize dark mode (must be early to prevent flash)
+    initializeDarkMode();
+    setupSystemThemeListener();
+    
     initializeTabs();
     initializeButtons();
     initializeCodeEditor();
     testBackendConnection();
     
-    // Load current lesson from progress or default to Lesson 1
-    const startingLesson = getUserProgress().currentLesson || '01';
+    // Load current lesson from progress with validation
+    const savedLesson = getUserProgress().currentLesson || '01';
+    const validLessons = ['01', '03']; // Available lessons
+    
+    // Validate saved lesson and fallback to '01' if invalid
+    const startingLesson = validLessons.includes(savedLesson) ? savedLesson : '01';
+    
+    if (savedLesson !== startingLesson) {
+        console.warn(`⚠️ Invalid saved lesson ${savedLesson}, falling back to lesson ${startingLesson}`);
+        // Reset to valid lesson
+        getUserProgress().currentLesson = startingLesson;
+        saveProgress();
+    }
+    
     navigateToLesson(startingLesson).catch(error => {
         console.error(`Failed to load lesson ${startingLesson}:`, error);
+        // Final fallback to lesson 1
+        if (startingLesson !== '01') {
+            console.log('🔄 Falling back to lesson 01');
+            navigateToLesson('01');
+        }
     });
     
     console.log('✅ Platform initialization complete!');
@@ -983,6 +1008,82 @@ async function collectUserInputs(inputCalls) {
 }
 
 /**
+ * Dark Mode Functions
+ */
+
+// Dark mode storage key
+const DARK_MODE_STORAGE_KEY = 'bhodi_dark_mode';
+
+// Initialize dark mode based on saved preference or system preference
+function initializeDarkMode() {
+    const savedTheme = localStorage.getItem(DARK_MODE_STORAGE_KEY);
+    
+    if (savedTheme) {
+        // Use saved preference
+        setTheme(savedTheme);
+        console.log(`🌙 Dark mode initialized from saved preference: ${savedTheme}`);
+    } else {
+        // Check system preference
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const theme = prefersDark ? 'dark' : 'light';
+        setTheme(theme);
+        console.log(`🌙 Dark mode initialized from system preference: ${theme}`);
+    }
+}
+
+// Set theme and save preference
+function setTheme(theme) {
+    if (theme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+        document.documentElement.removeAttribute('data-theme');
+    }
+    
+    localStorage.setItem(DARK_MODE_STORAGE_KEY, theme);
+    console.log(`🎨 Theme set to: ${theme}`);
+}
+
+// Get current theme
+function getCurrentTheme() {
+    return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+}
+
+// Toggle between light and dark mode
+function toggleDarkMode() {
+    const currentTheme = getCurrentTheme();
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    setTheme(newTheme);
+    
+    // Add visual feedback
+    const toggleBtn = document.getElementById('dark-mode-toggle');
+    if (toggleBtn) {
+        toggleBtn.style.transform = 'scale(0.9)';
+        setTimeout(() => {
+            toggleBtn.style.transform = '';
+        }, 150);
+    }
+    
+    console.log(`🔄 Dark mode toggled: ${currentTheme} → ${newTheme}`);
+}
+
+// Listen for system theme changes
+function setupSystemThemeListener() {
+    if (window.matchMedia) {
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        mediaQuery.addEventListener('change', (e) => {
+            // Only apply system preference if user hasn't manually set a preference
+            const savedTheme = localStorage.getItem(DARK_MODE_STORAGE_KEY);
+            if (!savedTheme) {
+                const theme = e.matches ? 'dark' : 'light';
+                setTheme(theme);
+                console.log(`🌙 System theme changed, applied: ${theme}`);
+            }
+        });
+    }
+}
+
+/**
  * Initialize buttons and keyboard shortcuts
  */
 function initializeButtons() {
@@ -991,6 +1092,7 @@ function initializeButtons() {
     const prevBtn = document.getElementById('prev-btn');
     const nextBtn = document.getElementById('next-btn');
     const settingsBtn = document.getElementById('settings-btn');
+    const darkModeToggle = document.getElementById('dark-mode-toggle');
     const lessonSelector = document.getElementById('lesson-selector');
     const minimizeBtn = document.getElementById('minimize-problem-btn');
     
@@ -1049,6 +1151,13 @@ function initializeButtons() {
                 console.error('❌ Error navigating to next lesson:', error);
                 updateStatus('Navigation failed', 'error');
             }
+        });
+    }
+    
+    // Dark Mode Toggle button
+    if (darkModeToggle) {
+        darkModeToggle.addEventListener('click', () => {
+            toggleDarkMode();
         });
     }
     
