@@ -1040,6 +1040,12 @@ function setTheme(theme) {
     }
     
     localStorage.setItem(DARK_MODE_STORAGE_KEY, theme);
+    
+    // Refresh CodeMirror if it exists (for initial theme setting)
+    if (window.codeEditor) {
+        setTimeout(() => refreshCodeMirrorTheme(), 100);
+    }
+    
     console.log(`🎨 Theme set to: ${theme}`);
 }
 
@@ -1055,6 +1061,9 @@ function toggleDarkMode() {
     
     setTheme(newTheme);
     
+    // Refresh CodeMirror to apply new theme
+    refreshCodeMirrorTheme();
+    
     // Add visual feedback
     const toggleBtn = document.getElementById('dark-mode-toggle');
     if (toggleBtn) {
@@ -1065,6 +1074,17 @@ function toggleDarkMode() {
     }
     
     console.log(`🔄 Dark mode toggled: ${currentTheme} → ${newTheme}`);
+}
+
+// Refresh CodeMirror to apply theme changes
+function refreshCodeMirrorTheme() {
+    if (window.codeEditor && window.codeEditor.refresh) {
+        // Force CodeMirror to refresh and re-apply styles
+        setTimeout(() => {
+            window.codeEditor.refresh();
+            console.log('🎨 CodeMirror theme refreshed');
+        }, 50);
+    }
 }
 
 // Listen for system theme changes

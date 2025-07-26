@@ -1762,31 +1762,88 @@ input:focus {
    Dark Mode Component Overrides
    =================================== */
 
-/* CodeMirror Dark Mode Support */
+/* CodeMirror Dark Mode Support - Professional Dark Theme */
 [data-theme="dark"] .CodeMirror {
-    background: var(--bg-secondary) !important;
-    color: var(--text-primary) !important;
+    background: #1e1e1e !important;
+    color: #d4d4d4 !important;
+    border: 1px solid var(--border-light) !important;
 }
 
 [data-theme="dark"] .CodeMirror-gutters {
-    background: var(--bg-accent) !important;
-    border-right: 1px solid var(--border-light) !important;
+    background: #252526 !important;
+    border-right: 1px solid #3e3e42 !important;
 }
 
 [data-theme="dark"] .CodeMirror-linenumber {
-    color: var(--text-muted) !important;
+    color: #858585 !important;
+    padding: 0 8px 0 0 !important;
 }
 
 [data-theme="dark"] .CodeMirror-cursor {
-    border-left: 1px solid var(--text-primary) !important;
+    border-left: 2px solid #aeafad !important;
 }
 
 [data-theme="dark"] .CodeMirror-selected {
-    background: rgba(255, 255, 255, 0.1) !important;
+    background: #264f78 !important;
 }
 
 [data-theme="dark"] .CodeMirror-activeline-background {
-    background: rgba(255, 255, 255, 0.05) !important;
+    background: #2a2d2e !important;
+}
+
+[data-theme="dark"] .CodeMirror-matchingbracket {
+    color: #ffdd44 !important;
+    background: rgba(255, 221, 68, 0.2) !important;
+}
+
+/* Python Syntax Highlighting for Dark Mode */
+[data-theme="dark"] .CodeMirror .cm-keyword {
+    color: #569cd6 !important; /* Blue for keywords like def, if, else */
+}
+
+[data-theme="dark"] .CodeMirror .cm-string {
+    color: #ce9178 !important; /* Orange for strings */
+}
+
+[data-theme="dark"] .CodeMirror .cm-comment {
+    color: #6a9955 !important; /* Green for comments */
+}
+
+[data-theme="dark"] .CodeMirror .cm-number {
+    color: #b5cea8 !important; /* Light green for numbers */
+}
+
+[data-theme="dark"] .CodeMirror .cm-operator {
+    color: #d4d4d4 !important; /* White for operators */
+}
+
+[data-theme="dark"] .CodeMirror .cm-variable {
+    color: #9cdcfe !important; /* Light blue for variables */
+}
+
+[data-theme="dark"] .CodeMirror .cm-def {
+    color: #dcdcaa !important; /* Yellow for function definitions */
+}
+
+[data-theme="dark"] .CodeMirror .cm-builtin {
+    color: #4ec9b0 !important; /* Teal for built-ins like print, input */
+}
+
+[data-theme="dark"] .CodeMirror .cm-property {
+    color: #9cdcfe !important; /* Light blue for properties */
+}
+
+[data-theme="dark"] .CodeMirror .cm-bracket {
+    color: #ffd700 !important; /* Gold for brackets */
+}
+
+/* CodeMirror Focus State */
+[data-theme="dark"] .CodeMirror-focused .CodeMirror-selected {
+    background: #264f78 !important;
+}
+
+[data-theme="dark"] .CodeMirror-focused .CodeMirror-cursor {
+    border-left: 2px solid #ffffff !important;
 }
 
 /* Dark mode button canvas adjustments */
