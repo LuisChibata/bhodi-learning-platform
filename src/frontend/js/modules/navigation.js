@@ -31,7 +31,7 @@ async function navigateToLesson(lessonId) {
         
     } catch (error) {
         console.error(`❌ Navigation to lesson ${lessonId} failed:`, error);
-        showOutput(`❌ Error loading lesson: ${error.message}`, 'error');
+        console.error(`❌ Error loading lesson: ${error.message}`);
     }
 }
 

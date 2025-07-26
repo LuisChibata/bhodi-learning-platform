@@ -229,6 +229,14 @@ async function loadLesson(lessonId) {
             updateLessonProgress(lessonId, 'in_progress');
         }
         
+        // Show/hide button canvas based on lesson type
+        if (lessonId === '03') {
+            console.log('🎮 Enabling interactive button canvas for lesson 03');
+            toggleButtonCanvas(true);
+        } else {
+            toggleButtonCanvas(false);
+        }
+        
         console.log(`✅ Lesson ${lessonId} loaded successfully`);
         return lessonData;
         
@@ -253,6 +261,9 @@ async function loadLesson(lessonId) {
             // Update UI with fallback content
             updateProblemStatement(fallbackLessonData.problem_statement);
             updateCodeEditor(fallbackLessonData.starter_code);
+            
+            // Show/hide button canvas based on lesson type (fallback)
+            toggleButtonCanvas(false); // Fallback is always lesson 01
             
             console.log(`✅ Lesson ${lessonId} loaded with fallback content`);
             return fallbackLessonData;
@@ -394,6 +405,214 @@ function updateCodeEditor(code) {
         // Store code for when editor is ready
         window.pendingStarterCode = code;
         console.log('💾 Pending starter code stored in window.pendingStarterCode');
+    }
+}
+
+/**
+ * Button Canvas Functions for Lesson 03
+ */
+
+// Check if current lesson is lesson 03 (Interactive Button)
+function isInteractiveButtonLesson() {
+    return currentLessonData && currentLessonData.lesson_id === '03';
+}
+
+// Show/hide button canvas based on lesson
+function toggleButtonCanvas(show = false) {
+    const canvasSection = document.getElementById('button-canvas-section');
+    if (canvasSection) {
+        if (show) {
+            canvasSection.style.display = 'block';
+            setTimeout(() => canvasSection.classList.add('visible'), 100);
+        } else {
+            canvasSection.classList.remove('visible');
+            setTimeout(() => canvasSection.style.display = 'none', 300);
+        }
+    }
+}
+
+// Parse Python code to extract Button objects
+function parseButtonsFromCode(code) {
+    const buttons = [];
+    const lines = code.split('\n');
+    
+    // Look for Button object creation patterns
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        
+        // Match patterns like: button_name = Button("Title", x, y, "action")
+        const buttonMatch = line.match(/(\w+)\s*=\s*Button\s*\(\s*["']([^"']+)["']\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*["']([^"']+)["'])?\s*\)/);
+        
+        if (buttonMatch) {
+            const [, varName, title, x, y, action] = buttonMatch;
+            buttons.push({
+                varName: varName,
+                title: title,
+                x: parseInt(x),
+                y: parseInt(y),
+                action: action || 'default'
+            });
+        }
+    }
+    
+    return buttons;
+}
+
+// Render buttons in the canvas
+function renderButtonsInCanvas(buttons) {
+    const canvas = document.getElementById('button-canvas');
+    const buttonCount = document.getElementById('button-count');
+    const placeholder = canvas.querySelector('.canvas-placeholder');
+    
+    if (!canvas) return;
+    
+    // Clear existing buttons (but keep placeholder)
+    const existingButtons = canvas.querySelectorAll('.canvas-button');
+    existingButtons.forEach(btn => btn.remove());
+    
+    // Hide placeholder if we have buttons
+    if (placeholder) {
+        placeholder.style.display = buttons.length > 0 ? 'none' : 'block';
+    }
+    
+    // Update button count
+    if (buttonCount) {
+        buttonCount.textContent = `${buttons.length} button${buttons.length !== 1 ? 's' : ''}`;
+    }
+    
+    // Create visual buttons
+    buttons.forEach((buttonData, index) => {
+        const button = document.createElement('button');
+        button.className = 'canvas-button';
+        button.textContent = buttonData.title;
+        button.style.left = `${Math.min(Math.max(buttonData.x, 10), 750)}px`;
+        button.style.top = `${Math.min(Math.max(buttonData.y, 10), 350)}px`;
+        
+        // Add style based on action type
+        if (buttonData.action === 'quit') {
+            button.classList.add('quit-style');
+        } else if (buttonData.action === 'help') {
+            button.classList.add('help-style');
+        } else if (buttonData.action === 'exit') {
+            button.classList.add('exit-style');
+        } else if (buttonData.action === 'mystery') {
+            button.classList.add('mystery-style');
+        }
+        
+        // Add click handler to simulate button.on_click()
+        button.addEventListener('click', () => {
+            simulateButtonClick(buttonData);
+        });
+        
+        // Add animation delay
+        button.style.animationDelay = `${index * 0.1}s`;
+        
+        canvas.appendChild(button);
+    });
+}
+
+// Simulate button click and execute on_click method
+async function simulateButtonClick(buttonData) {
+    const interactionsDiv = document.getElementById('button-interactions');
+    
+    if (!interactionsDiv) return;
+    
+    // Create interaction entry
+    const entry = document.createElement('div');
+    entry.className = 'button-interaction-entry';
+    
+    const timestamp = new Date().toLocaleTimeString();
+    entry.innerHTML = `
+        <strong>🖱️ Button Clicked:</strong> "${buttonData.title}" at (${buttonData.x}, ${buttonData.y})<br>
+        <strong>⏰ Time:</strong> ${timestamp}<br>
+        <strong>🎬 Action:</strong> Executing on_click() method...
+    `;
+    
+    // Clear placeholder if it exists
+    const placeholder = interactionsDiv.querySelector('p');
+    if (placeholder && placeholder.textContent.includes('Button click results will appear here')) {
+        placeholder.remove();
+    }
+    
+    interactionsDiv.appendChild(entry);
+    
+    // Simulate execution of on_click() method by running a simplified version
+    try {
+        // Create simplified Button class and execute on_click
+        const buttonCode = `
+class Button:
+    def __init__(self, title, x, y, action="default"):
+        self.title = "${buttonData.title}"
+        self.x = ${buttonData.x}
+        self.y = ${buttonData.y}
+        self.action = "${buttonData.action}"
+    
+    def on_click(self):
+        if self.action == "quit":
+            return "❌ ERROR: Quit button is currently being debugged by our team of highly trained monkeys. Please try again in 3-5 business years!"
+        elif self.action == "help":
+            return "💡 HELP: The only help you need is to realize that quitting is not an option. Have you tried NOT quitting instead?"
+        elif self.action == "exit":
+            return "🚪 EXIT: Exit door is temporarily out of order due to excessive quit attempts. Management apologizes for the inconvenience!"
+        else:
+            return "🎮 This button doesn't help you quit either! Surprise!"
+
+# Create button and execute on_click
+button = Button("${buttonData.title}", ${buttonData.x}, ${buttonData.y}, "${buttonData.action}")
+result = button.on_click()
+print(f"🗣️ Button Response: {result}")
+`;
+        
+        // Execute the button click simulation
+        const response = await fetch(`${API_BASE_URL}/api/run-code`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ code: buttonCode })
+        });
+        
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            const output = result.output.trim();
+            entry.innerHTML += `<br><strong>🎭 Result:</strong> <code>${output}</code>`;
+            entry.classList.add('success');
+        } else {
+            entry.innerHTML += '<br><strong>❌ Error:</strong> Failed to execute on_click() method';
+            entry.classList.add('error');
+        }
+    } catch (error) {
+        entry.innerHTML += `<br><strong>❌ Error:</strong> ${error.message}`;
+        entry.classList.add('error');
+    }
+    
+    // Scroll to latest interaction
+    interactionsDiv.scrollTop = interactionsDiv.scrollHeight;
+}
+
+// Clear all buttons from canvas
+function clearButtonCanvas() {
+    const canvas = document.getElementById('button-canvas');
+    const buttonCount = document.getElementById('button-count');
+    const placeholder = canvas?.querySelector('.canvas-placeholder');
+    const interactionsDiv = document.getElementById('button-interactions');
+    
+    if (canvas) {
+        const buttons = canvas.querySelectorAll('.canvas-button');
+        buttons.forEach(btn => btn.remove());
+        
+        if (placeholder) {
+            placeholder.style.display = 'block';
+        }
+    }
+    
+    if (buttonCount) {
+        buttonCount.textContent = '0 buttons';
+    }
+    
+    if (interactionsDiv) {
+        interactionsDiv.innerHTML = '<p>Button click results will appear here...</p>';
     }
 }
 
@@ -856,6 +1075,14 @@ function initializeButtons() {
         });
     }
     
+    // Button Canvas clear button (for lesson 03)
+    const clearCanvasBtn = document.getElementById('clear-canvas-btn');
+    if (clearCanvasBtn) {
+        clearCanvasBtn.addEventListener('click', () => {
+            clearButtonCanvas();
+        });
+    }
+    
     // Keyboard shortcuts
     setupKeyboardShortcuts();
 }
@@ -1108,6 +1335,27 @@ async function handleRunCode() {
                 };
             }
             
+            // Handle interactive button rendering for lesson 03
+            if (isInteractiveButtonLesson()) {
+                console.log('🎮 Lesson 03: Parsing code for Button objects...');
+                const buttons = parseButtonsFromCode(code);
+                console.log(`🎮 Found ${buttons.length} Button objects:`, buttons);
+                
+                if (buttons.length > 0) {
+                    renderButtonsInCanvas(buttons);
+                    
+                    // Add button canvas info to output
+                    formattedOutput += `\n${'─'.repeat(40)}\n`;
+                    formattedOutput += '🎮 Interactive Button Canvas:\n';
+                    formattedOutput += `🔳 ${buttons.length} button${buttons.length !== 1 ? 's' : ''} rendered in the Button Canvas\n`;
+                    formattedOutput += '🖱️ Click the buttons above to test their on_click() methods!\n';
+                    formattedOutput += `${'─'.repeat(40)}\n`;
+                } else {
+                    // Clear canvas if no buttons found
+                    clearButtonCanvas();
+                }
+            }
+            
             showOutput(formattedOutput, inputCalls.length > 0);
             updateStatus('Execution successful', 'ready');
             
@@ -1241,7 +1489,7 @@ function handleExecutionError(result, clientTime) {
                 errorMessage += 'Please try again or contact support if the problem persists.';
                 break;
                 
-            default:
+            default: {
                 // Generic error handling for unknown error types
                 const stderr = result.error_output || result.message || 'Unknown error';
                 errorMessage = '❌ Error Occurred\n\n';
@@ -1253,6 +1501,7 @@ function handleExecutionError(result, clientTime) {
                 }
                 errorMessage += '\n💡 Tip: Check the error message above for specific line numbers and fix suggestions.';
                 break;
+            }
         }
     }
     

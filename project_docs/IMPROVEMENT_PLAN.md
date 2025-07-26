@@ -1,31 +1,35 @@
 # Bhodi Learning Platform - Improvement Plan
 
 ## Plan Metadata
-| Attribute | Value |
-|-----------|-------|
-| **Plan Type** | Post-code-review enhancement roadmap |
-| **Duration** | 5 weeks (3-4 weeks for 1 developer) |
-| **Priority** | High (security fixes), Medium (testing), Low (monitoring) |
+
+| Attribute                  | Value                                                     |
+| -------------------------- | --------------------------------------------------------- |
+| **Plan Type**        | Post-code-review enhancement roadmap                      |
+| **Duration**         | 5 weeks (3-4 weeks for 1 developer)                       |
+| **Priority**         | High (security fixes), Medium (testing), Low (monitoring) |
 | **Success Criteria** | Zero vulnerabilities + 80% test coverage + B+ → A- grade |
-| **Dependencies** | None - all improvements are additive |
-| **Risk Level** | Low to Medium |
+| **Dependencies**     | None - all improvements are additive                      |
+| **Risk Level**       | Low to Medium                                             |
 
 ## Executive Summary
-**Context**: Comprehensive code review completed July 2025 (Grade B+)  
-**Objective**: Address critical security vulnerabilities, implement missing testing infrastructure, enhance code quality  
-**Approach**: Maintain platform's strong architectural foundation while systematic improvement  
+
+**Context**: Comprehensive code review completed July 2025 (Grade B+)
+**Objective**: Address critical security vulnerabilities, implement missing testing infrastructure, enhance code quality
+**Approach**: Maintain platform's strong architectural foundation while systematic improvement
 **Outcome**: Production-ready platform with enterprise-grade quality standards
 
 ## Phase 1: Critical Security & Testing (Week 1-2)
 
 ### Week 1: Security Vulnerabilities
-| Task | Command | Expected Outcome | Risk Level |
-|------|---------|------------------|------------|
-| **Fix npm vulnerabilities** | `npm audit fix` | dompurify ≥3.2.4, mermaid updated | Low |
-| **Verify functionality** | Manual testing | No breaking changes | Low |
-| **Security validation** | `npm audit` | Zero vulnerabilities reported | Low |
+
+| Task                              | Command           | Expected Outcome                   | Risk Level |
+| --------------------------------- | ----------------- | ---------------------------------- | ---------- |
+| **Fix npm vulnerabilities** | `npm audit fix` | dompurify ≥3.2.4, mermaid updated | Low        |
+| **Verify functionality**    | Manual testing    | No breaking changes                | Low        |
+| **Security validation**     | `npm audit`     | Zero vulnerabilities reported      | Low        |
 
 ### Week 2: Testing Infrastructure
+
 ```yaml
 Backend Testing:
   Framework: pytest + pytest-cov + flask-testing
@@ -49,13 +53,15 @@ Coverage Target: 60% minimum (critical functions priority)
 ## Phase 2: Code Quality & Performance (Week 3)
 
 ### Function Refactoring
-| Component | Current State | Target State | Complexity |
-|-----------|---------------|--------------|------------|
-| **handleRunCode()** | 174 lines | <50 lines each function | Medium |
-| **safe_runner.py** | Empty file | Implemented functionality | Low |
-| **Error boundaries** | Basic | Comprehensive frontend | Low |
+
+| Component                  | Current State | Target State              | Complexity |
+| -------------------------- | ------------- | ------------------------- | ---------- |
+| **handleRunCode()**  | 174 lines     | <50 lines each function   | Medium     |
+| **safe_runner.py**   | Empty file    | Implemented functionality | Low        |
+| **Error boundaries** | Basic         | Comprehensive frontend    | Low        |
 
 ### Development Tools Setup
+
 ```yaml
 Python Tools:
   Linting: flake8
@@ -75,15 +81,17 @@ Pre-commit Hooks:
 ```
 
 ### Performance Optimizations
-| Optimization | Implementation | Expected Benefit |
-|--------------|----------------|------------------|
-| **Response caching** | HTTP headers | Reduced server load |
-| **Request debouncing** | Frontend throttling | Improved UX |
-| **Bundle optimization** | Webpack analysis | Faster load times |
+
+| Optimization                  | Implementation      | Expected Benefit    |
+| ----------------------------- | ------------------- | ------------------- |
+| **Response caching**    | HTTP headers        | Reduced server load |
+| **Request debouncing**  | Frontend throttling | Improved UX         |
+| **Bundle optimization** | Webpack analysis    | Faster load times   |
 
 ## Phase 3: Enhanced Monitoring & UX (Week 4)
 
 ### Structured Logging Implementation
+
 ```yaml
 Logging Framework:
   Current: print statements
@@ -102,14 +110,16 @@ Implementation:
 ```
 
 ### Application Metrics
-| Metric Type | Tool | Implementation | Purpose |
-|-------------|------|----------------|----------|
-| **Code Execution** | prometheus-client | Execution time, success rate | Performance monitoring |
-| **User Interactions** | Custom counters | Button clicks, lesson progress | Usage analytics |
-| **Error Rates** | Exception tracking | Error types, frequency | Quality monitoring |
-| **System Health** | Health checks | Response times, uptime | Operational monitoring |
+
+| Metric Type                 | Tool               | Implementation                 | Purpose                |
+| --------------------------- | ------------------ | ------------------------------ | ---------------------- |
+| **Code Execution**    | prometheus-client  | Execution time, success rate   | Performance monitoring |
+| **User Interactions** | Custom counters    | Button clicks, lesson progress | Usage analytics        |
+| **Error Rates**       | Exception tracking | Error types, frequency         | Quality monitoring     |
+| **System Health**     | Health checks      | Response times, uptime         | Operational monitoring |
 
 ### UX Enhancements
+
 ```yaml
 Loading States:
   Target: All async operations
@@ -130,6 +140,7 @@ Progressive Web App:
 ## Phase 4: Documentation & CI/CD (Week 5)
 
 ### API Documentation
+
 ```yaml
 OpenAPI/Swagger Implementation:
   Tool: flask-swagger-ui
@@ -148,14 +159,16 @@ Documentation Structure:
 ```
 
 ### Quality Assurance Pipeline
-| Stage | Tools | Trigger | Success Criteria |
-|-------|-------|---------|-------------------|
-| **Security Scan** | npm audit, safety | Every PR | Zero vulnerabilities |
-| **Code Quality** | flake8, eslint | Every commit | Zero linting errors |
-| **Testing** | pytest, jest | Every PR | 80%+ coverage |
-| **Build** | CI/CD pipeline | Merge to main | Successful deployment |
+
+| Stage                   | Tools             | Trigger       | Success Criteria      |
+| ----------------------- | ----------------- | ------------- | --------------------- |
+| **Security Scan** | npm audit, safety | Every PR      | Zero vulnerabilities  |
+| **Code Quality**  | flake8, eslint    | Every commit  | Zero linting errors   |
+| **Testing**       | pytest, jest      | Every PR      | 80%+ coverage         |
+| **Build**         | CI/CD pipeline    | Merge to main | Successful deployment |
 
 ### CI/CD Configuration
+
 ```yaml
 # .github/workflows/quality.yml
 name: Quality Gates
@@ -178,6 +191,7 @@ jobs:
 ## Implementation Checklist
 
 ### Week 1: Security Foundation
+
 ```yaml
 Security Fixes:
   - [ ] Execute: npm audit fix
@@ -193,6 +207,7 @@ Validation Criteria:
 ```
 
 ### Week 2: Testing Infrastructure
+
 ```yaml
 Backend Testing Setup:
   - [ ] Install: pytest pytest-cov flask-testing
@@ -215,6 +230,7 @@ CI/CD Pipeline:
 ```
 
 ### Week 3: Code Quality Enhancement
+
 ```yaml
 Function Refactoring:
   - [ ] Analyze: handleRunCode() (174 lines)
@@ -236,6 +252,7 @@ Performance:
 ```
 
 ### Week 4: Monitoring & UX
+
 ```yaml
 Structured Logging:
   - [ ] Replace: print statements with logging
@@ -256,6 +273,7 @@ UX Enhancements:
 ```
 
 ### Week 5: Documentation & Final Review
+
 ```yaml
 API Documentation:
   - [ ] Install: flask-swagger-ui
@@ -274,6 +292,7 @@ Final Quality Review:
 ## Success Metrics & Validation
 
 ### Technical Metrics
+
 ```yaml
 Security:
   Target: Zero high/critical vulnerabilities
@@ -297,6 +316,7 @@ Performance:
 ```
 
 ### Quality Gate Checklist
+
 - [ ] **Security**: Zero vulnerabilities in npm audit
 - [ ] **Testing**: 80%+ coverage on critical functions
 - [ ] **Linting**: Zero errors from flake8 + eslint
@@ -307,14 +327,16 @@ Performance:
 ## Risk Assessment & Mitigation
 
 ### Risk Matrix
-| Risk | Probability | Impact | Mitigation Strategy |
-|------|-------------|--------|--------------------||
-| **Dependency Updates Break UI** | Low | Medium | Feature flags + staged rollout |
-| **Testing Reveals Critical Bugs** | Medium | High | Comprehensive testing in dev environment |
-| **Refactoring Introduces Regressions** | Medium | Medium | Extensive test coverage before refactoring |
-| **Performance Impact from Monitoring** | Low | Low | Lightweight metrics + sampling |
+
+| Risk                                         | Probability | Impact | Mitigation Strategy                        |
+| -------------------------------------------- | ----------- | ------ | ------------------------------------------ |
+| **Dependency Updates Break UI**        | Low         | Medium | Feature flags + staged rollout             |
+| **Testing Reveals Critical Bugs**      | Medium      | High   | Comprehensive testing in dev environment   |
+| **Refactoring Introduces Regressions** | Medium      | Medium | Extensive test coverage before refactoring |
+| **Performance Impact from Monitoring** | Low         | Low    | Lightweight metrics + sampling             |
 
 ### Mitigation Strategies
+
 ```yaml
 Deployment Safety:
   - Feature flags for new functionality
@@ -332,14 +354,16 @@ Code Quality:
 ## Resource Requirements
 
 ### Development Resources
-| Resource | Requirement | Duration | Notes |
-|----------|-------------|----------|-------|
-| **Developer Time** | 1 FTE | 3-4 weeks | Full-stack development skills |
-| **Infrastructure** | Existing | N/A | No additional costs |
-| **Tools** | Open source | N/A | pytest, jest, eslint, flake8 |
-| **Testing Environment** | Development setup | Throughout | Local development sufficient |
+
+| Resource                      | Requirement       | Duration   | Notes                         |
+| ----------------------------- | ----------------- | ---------- | ----------------------------- |
+| **Developer Time**      | 1 FTE             | 3-4 weeks  | Full-stack development skills |
+| **Infrastructure**      | Existing          | N/A        | No additional costs           |
+| **Tools**               | Open source       | N/A        | pytest, jest, eslint, flake8  |
+| **Testing Environment** | Development setup | Throughout | Local development sufficient  |
 
 ### Success Timeline
+
 ```yaml
 Week 1: Security vulnerabilities resolved
 Week 2: Testing framework operational (60% coverage)
@@ -350,17 +374,17 @@ Week 5: Documentation complete + final review
 
 ## Plan Summary
 
-**Foundation Maintained**: Platform's excellent architectural foundation preserved  
-**Critical Gaps Addressed**: Security vulnerabilities, testing infrastructure, code quality  
-**Quality Progression**: B+ grade → A- grade expected outcome  
-**Long-term Benefits**: Enhanced maintainability, reliability, developer experience  
-**Risk Profile**: Low to medium risk with comprehensive mitigation strategies  
+**Foundation Maintained**: Platform's excellent architectural foundation preserved
+**Critical Gaps Addressed**: Security vulnerabilities, testing infrastructure, code quality
+**Quality Progression**: B+ grade → A- grade expected outcome
+**Long-term Benefits**: Enhanced maintainability, reliability, developer experience
+**Risk Profile**: Low to medium risk with comprehensive mitigation strategies
 
 ---
 
-**Plan Metadata**  
-*Generated*: July 26, 2025  
-*Based on*: Comprehensive code review (Grade B+)  
-*Foundation*: Strong security architecture + clean separation of concerns  
-*Approach*: Systematic enhancement while preserving core strengths  
+**Plan Metadata**
+*Generated*: July 26, 2025
+*Based on*: Comprehensive code review (Grade B+)
+*Foundation*: Strong security architecture + clean separation of concerns
+*Approach*: Systematic enhancement while preserving core strengths
 *Target Outcome*: Enterprise-grade quality standards achieved*

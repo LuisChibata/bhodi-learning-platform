@@ -49,6 +49,7 @@
             <label for="lesson-selector" class="sr-only">Select Lesson</label>
             <select id="lesson-selector" class="lesson-selector" aria-label="Select lesson to study">
                 <option value="1">Lesson 1: The First Room</option>
+                <option value="3">Lesson 3: Interactive Button</option>
             </select>
             <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Lesson progress">
                 <div class="progress-fill" style="width: 0%"></div>
@@ -85,6 +86,32 @@
                         <li>✨ Removed distracting elements that didn't serve your learning</li>
                     </ul>
                     <p>The interface now follows a natural top-to-bottom learning flow: Read the problem, write your code, then see the results.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Button Canvas Panel (Only for lesson 03) -->
+        <section id="button-canvas-section" class="button-canvas-section" aria-label="Interactive button canvas" style="display: none;">
+            <div class="canvas-panel" role="region" aria-labelledby="canvas-heading">
+                <div class="panel-header">
+                    <h3 id="canvas-heading">Button Canvas <span class="canvas-badge">Interactive</span></h3>
+                    <div class="canvas-info">
+                        <span id="button-count">0 buttons</span>
+                        <button id="clear-canvas-btn" class="action-btn secondary" aria-label="Clear all buttons from canvas">Clear Canvas</button>
+                    </div>
+                </div>
+                <div id="button-canvas" class="button-canvas" role="application" aria-label="Interactive button area">
+                    <div class="canvas-placeholder">
+                        <p>🎮 Your interactive buttons will appear here!</p>
+                        <p>💡 Run your code to see your Button objects rendered visually</p>
+                        <p>🖱️ Click the buttons to test their on_click() methods</p>
+                    </div>
+                </div>
+                <div class="canvas-output" role="region" aria-labelledby="canvas-output-heading">
+                    <h4 id="canvas-output-heading">Button Interactions</h4>
+                    <div id="button-interactions" class="button-interactions" aria-live="polite">
+                        <p>Button click results will appear here...</p>
+                    </div>
                 </div>
             </div>
         </section>
